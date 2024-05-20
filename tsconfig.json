@@ -21,6 +21,7 @@
 	},
 	"include": [
 		"**/*.ts",
+		"**/*.tsx",
 		"main.tsx"
 	]
 }
