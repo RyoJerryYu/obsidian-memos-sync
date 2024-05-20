@@ -5,8 +5,9 @@ import { App, TFile, normalizePath } from "obsidian";
 import { PluginSettings } from "types/PluginSettings";
 import { DailyRecordType, FetchError, ResourceType } from "types/usememos";
 import * as log from "utils/log";
+import { MemosClient0191 } from "api/memos-v0.19.1";
 
-export function generateHeaderRegExp(header: string) {
+function generateHeaderRegExp(header: string) {
 	const formattedHeader = /^#+/.test(header.trim())
 		? header.trim()
 		: `# ${header.trim()}`;
@@ -38,7 +39,8 @@ function isBulletList(content: string) {
 function formatDailyRecord(record: DailyRecordType) {
 	const { createdTs, createdAt, content, resourceList } = record;
 	const timeStamp = createdAt ? window.moment(createdAt).unix() : createdTs;
-	const [date, time] = window.moment(timeStamp * 1000)
+	const [date, time] = window
+		.moment(timeStamp * 1000)
 		.format("YYYY-MM-DD HH:mm")
 		.split(" ");
 	const [firstLine, ...otherLine] = content.trim().split("\n");
@@ -94,7 +96,7 @@ export class DailyMemos {
 	private offset: number;
 	private lastTime: string;
 	private localKey: string;
-	private axios: Axios;
+	private memosClient: MemosClient0191;
 
 	constructor(app: App, settings: PluginSettings) {
 		if (!settings.usememosAPI) {
@@ -112,41 +114,11 @@ export class DailyMemos {
 		this.offset = 0;
 		this.lastTime = window.localStorage.getItem(this.localKey) || "";
 
-		this.axios = axios.create({
-			headers: {
-				Authorization: `Bearer ${this.settings.usememosToken}`,
-				Accept: "application/json",
-			},
-		});
+		this.memosClient = new MemosClient0191(
+			this.settings.usememosAPI,
+			this.settings.usememosToken
+		);
 	}
-
-	/**
-	 * Fetch daily memos from usememos API.
-	 * paginate by {this.limit} and {this.offset}.
-	 */
-	private fetch = async (): Promise<DailyRecordType[] | undefined> => {
-		try {
-			const { data } = await this.axios.get<
-				DailyRecordType[] | FetchError
-			>(this.settings.usememosAPI+`/memo`, {
-				params: {
-					limit: this.limit,
-					offset: this.offset,
-					rowStatus: "NORMAL",
-				},
-			});
-
-			if (Array.isArray(data)) {
-				return data;
-			}
-
-			throw new Error(
-				data.message || data.msg || data.error || JSON.stringify(data)
-			);
-		} catch (error) {
-			log.error(`Failed to fetch daily memos: ${error}`);
-		}
-	};
 
 	forceSync = async () => {
 		this.lastTime = "";
@@ -167,9 +139,7 @@ export class DailyMemos {
 	private downloadResource = async () => {
 		const { origin } = new URL(this.settings.usememosAPI);
 		try {
-			const { data } = await this.axios.get<ResourceType[] | FetchError>(
-				this.settings.usememosAPI +`/resource`
-			);
+			const data = await this.memosClient.listResources();
 
 			if (!Array.isArray(data)) {
 				throw new Error(
@@ -184,7 +154,9 @@ export class DailyMemos {
 				data.map(async (resource) => {
 					if (resource.externalLink) {
 						// do not download external resources
-						log.debug(`External resource, skip download: ${resource.externalLink}`)
+						log.debug(
+							`External resource, skip download: ${resource.externalLink}`
+						);
 						return;
 					}
 					this.settings;
@@ -198,27 +170,29 @@ export class DailyMemos {
 					const isResourceExists =
 						await this.app.vault.adapter.exists(resourcePath);
 					if (isResourceExists) {
-						log.debug(`Resource exists, skip download: ${resourcePath}`);
+						log.debug(
+							`Resource exists, skip download: ${resourcePath}`
+						);
 						return;
 					}
 
-					const resourceURL = `${origin}/o/r/${
-						resource.uid || resource.name || resource.id
-					}`;
-					const { data } = await this.axios.get(resourceURL, {
-						responseType: "arraybuffer",
-					});
+					const data = await this.memosClient.getResourceBuffer(
+						resource
+					);
 
 					if (!data) {
-						log.warn(`Failed to fetch resource: ${resourceURL}`);
+						log.warn(`Failed to fetch resource: ${resource}`);
 						return;
 					}
 
 					//TODO: Create Folder...
+					// will cause error, make it more robust
 					if (!this.app.vault.getAbstractFileByPath(folder)) {
+						log.info(`Creating folder: ${folder}`)
 						this.app.vault.createFolder(folder);
 					}
 
+					log.debug(`Download resource: ${resourcePath}`);
 					await this.app.vault.adapter.writeBinary(
 						resourcePath,
 						data
@@ -227,6 +201,7 @@ export class DailyMemos {
 			);
 		} catch (error) {
 			if (error.response && error.response.status === 404) {
+				log.debug(`fetch resources 404: ${origin}/resource`)
 				return;
 			}
 			log.error(`Failed to fetch resource: ${error}`);
@@ -234,7 +209,9 @@ export class DailyMemos {
 	};
 
 	private insertDailyMemos = async () => {
-		const records = (await this.fetch()) || [];
+		const records =
+			(await this.memosClient.listMemos(this.limit, this.offset)) ||
+			[];
 
 		const mostRecentRecordTimeStamp = records[0]?.createdAt
 			? window.moment(records[0]?.createdAt).unix()
@@ -337,7 +314,8 @@ export class DailyMemos {
 		const reg = generateHeaderRegExp(header);
 		const regMatch = originFileContent.match(reg);
 
-		if (!regMatch?.length || !regMatch.index) {
+		if (!regMatch?.length || regMatch.index === undefined) {
+			log.debug(`${regMatch}`)
 			log.warn(
 				`Failed to find header for ${today}. Please make sure your daily note template is correct.`
 			);
