@@ -150,6 +150,19 @@ export class DailyMemos {
 				);
 			}
 
+			if (!data.length) {
+				log.debug(`No resources found: ${origin}/resource`);
+				return;
+			}
+
+			//TODO: Set the folder use obsidian-daily-notes-interface
+			const folder = this.settings.attachmentFolder;
+			//TODO: Create Folder...
+			// will cause error, make it more robust
+			if (!this.app.vault.getAbstractFileByPath(folder)) {
+				log.info(`Creating folder: ${folder}`);
+				await this.app.vault.createFolder(folder);
+			}
 			await Promise.all(
 				data.map(async (resource) => {
 					if (resource.externalLink) {
@@ -161,8 +174,6 @@ export class DailyMemos {
 					}
 					this.settings;
 
-					//TODO: Set the folder use obsidian-daily-notes-interface
-					const folder = this.settings.attachmentFolder;
 					const resourcePath = normalizePath(
 						`${folder}/${generateFileName(resource)}`
 					);
@@ -185,13 +196,6 @@ export class DailyMemos {
 						return;
 					}
 
-					//TODO: Create Folder...
-					// will cause error, make it more robust
-					if (!this.app.vault.getAbstractFileByPath(folder)) {
-						log.info(`Creating folder: ${folder}`)
-						this.app.vault.createFolder(folder);
-					}
-
 					log.debug(`Download resource: ${resourcePath}`);
 					await this.app.vault.adapter.writeBinary(
 						resourcePath,
@@ -201,7 +205,7 @@ export class DailyMemos {
 			);
 		} catch (error) {
 			if (error.response && error.response.status === 404) {
-				log.debug(`fetch resources 404: ${origin}/resource`)
+				log.debug(`fetch resources 404: ${origin}/resource`);
 				return;
 			}
 			log.error(`Failed to fetch resource: ${error}`);
@@ -210,8 +214,7 @@ export class DailyMemos {
 
 	private insertDailyMemos = async () => {
 		const records =
-			(await this.memosClient.listMemos(this.limit, this.offset)) ||
-			[];
+			(await this.memosClient.listMemos(this.limit, this.offset)) || [];
 
 		const mostRecentRecordTimeStamp = records[0]?.createdAt
 			? window.moment(records[0]?.createdAt).unix()
@@ -315,7 +318,7 @@ export class DailyMemos {
 		const regMatch = originFileContent.match(reg);
 
 		if (!regMatch?.length || regMatch.index === undefined) {
-			log.debug(`${regMatch}`)
+			log.debug(`${regMatch}`);
 			log.warn(
 				`Failed to find header for ${today}. Please make sure your daily note template is correct.`
 			);
