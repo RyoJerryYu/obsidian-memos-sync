@@ -1,5 +1,8 @@
-import axios, { Axios } from "axios";
-import { getAllDailyNotes, getDailyNote } from "obsidian-daily-notes-interface";
+import {
+	createDailyNote,
+	getAllDailyNotes,
+	getDailyNote,
+} from "obsidian-daily-notes-interface";
 import type { Moment } from "moment";
 import { App, TFile, normalizePath } from "obsidian";
 import { PluginSettings } from "types/PluginSettings";
@@ -11,7 +14,7 @@ function generateHeaderRegExp(header: string) {
 	const formattedHeader = /^#+/.test(header.trim())
 		? header.trim()
 		: `# ${header.trim()}`;
-	const reg = new RegExp(`(${formattedHeader}[^\n]*)([\\s\\S]*?)(?=\\n##|$)`);
+	const reg = new RegExp(`(${formattedHeader}[^\n]*)([\\s\\S]*?)(?=\\n#|$)`);
 
 	return reg;
 }
@@ -67,10 +70,7 @@ function formatDailyRecord(record: DailyRecordType) {
 		? "\n" +
 		  otherLine
 				.filter((line: string) => line.trim())
-				.map(
-					(line: string) =>
-						`\t${isBulletList(line) ? line : `- ${line}`}`
-				)
+				.map((line) => `\t${line}`)
 				.join("\n")
 				.trimEnd()
 		: "";
@@ -89,6 +89,29 @@ function formatDailyRecord(record: DailyRecordType) {
 	return [date, timeStamp, finalTargetContent].map(String);
 }
 
+class DailyNoteManager {
+	private allDailyNotes: Record<string, TFile>;
+	constructor() {
+		this.allDailyNotes = getAllDailyNotes();
+	}
+
+	getOrCreateDailyNote = async (date: Moment) => {
+		const dailyNote = getDailyNote(date, this.allDailyNotes);
+		if (!dailyNote) {
+			log.info(`Failed to find daily note for ${date}, creating...`);
+			const newDailyNote = await createDailyNote(date);
+			this.allDailyNotes = getAllDailyNotes();
+			return newDailyNote;
+		}
+
+		return dailyNote;
+	};
+
+	reload = () => {
+		this.allDailyNotes = getAllDailyNotes();
+	};
+}
+
 export class DailyMemos {
 	private app: App;
 	private settings: PluginSettings;
@@ -97,6 +120,7 @@ export class DailyMemos {
 	private lastTime: string;
 	private localKey: string;
 	private memosClient: MemosClient0191;
+	private dailyNoteManager: DailyNoteManager;
 
 	constructor(app: App, settings: PluginSettings) {
 		if (!settings.usememosAPI) {
@@ -118,6 +142,7 @@ export class DailyMemos {
 			this.settings.usememosAPI,
 			this.settings.usememosToken
 		);
+		this.dailyNoteManager = new DailyNoteManager();
 	}
 
 	forceSync = async () => {
@@ -252,19 +277,10 @@ export class DailyMemos {
 				async ([today, dailyMemosForToday]) => {
 					const momentDay = window.moment(today);
 
-					//TODO: Set as daily note link
-					const link = `${momentDay.format("YYYY-MM-DD")}.md`;
-
-					//TODO: get file use obsidian-daily-notes-interface
-					// getDailyNote(moment(),getAllDailyNotes())
 					const targetFile =
-						this.app.metadataCache.getFirstLinkpathDest(link, "");
-					// const targetFfile = this.file
-					if (!targetFile) {
-						log.warn(`Failed to find daily note for ${today}`);
-						// TODO create daily note
-						return;
-					}
+						await this.dailyNoteManager.getOrCreateDailyNote(
+							momentDay
+						);
 
 					// read daily note, modify the memos list
 
@@ -327,7 +343,7 @@ export class DailyMemos {
 
 		const localRecordContent = regMatch[2]?.trim(); // the memos list
 		const from = regMatch.index + regMatch[1].length + 1; // start of the memos list
-		const to = from + localRecordContent.length; // end of the memos list
+		const to = from + localRecordContent.length + 1; // end of the memos list
 		const prefix = originFileContent.slice(0, from); // contents before the memos list
 		const suffix = originFileContent.slice(to); // contents after the memos list
 		const localRecordList = localRecordContent
@@ -347,12 +363,17 @@ export class DailyMemos {
 			}
 		}
 
+		log.debug(`for ${today}\n\nfetchedRecordList: ${JSON.stringify({
+			from,to,prefix,suffix,localRecordList,existedRecordList
+		})}`);
+
 		const sortedRecordList = Object.entries({
 			...fetchedRecordList,
 			...existedRecordList,
 		})
 			.sort((a, b) => Number(a[0]) - Number(b[0]))
-			.map((item) => item[1]);
+			.map((item) => item[1])
+			.join("\n");
 
 		const modifiedFileContent =
 			prefix.trim() +
