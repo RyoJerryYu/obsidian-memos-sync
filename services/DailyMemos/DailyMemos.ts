@@ -13,10 +13,6 @@ import { MemosClient0191 } from "api/memos-v0.19.1";
 import { generateFileName } from "./memos-util";
 import { MemosPaginator0191 } from "./MemosPaginator";
 
-function isBulletList(content: string) {
-	return /^([-*\u2022]|\d+\.) .*/.test(content);
-}
-
 function generateHeaderRegExp(header: string) {
 	const formattedHeader = /^#+/.test(header.trim())
 		? header.trim()
@@ -54,7 +50,6 @@ export class DailyMemos {
 	private settings: PluginSettings;
 	private localKey: string;
 	private memosClient: MemosClient0191;
-	private dailyNoteManager: DailyNoteManager;
 	private memosPaginator: MemosPaginator0191;
 
 	constructor(app: App, settings: PluginSettings) {
@@ -72,7 +67,6 @@ export class DailyMemos {
 			this.settings.usememosAPI,
 			this.settings.usememosToken
 		);
-		this.dailyNoteManager = new DailyNoteManager();
 
 		this.localKey = `periodic-para-daily-record-last-time-${this.settings.usememosToken}`;
 		const lastTime = window.localStorage.getItem(this.localKey) || "";
@@ -83,15 +77,17 @@ export class DailyMemos {
 	}
 
 	forceSync = async () => {
-		this.lastTime = "";
-		this.sync();
+		log.info("Force syncing daily memos...");
+		const forcePaginator = new MemosPaginator0191(this.memosClient, "");
+		this.downloadResource();
+		this.insertDailyMemos(forcePaginator);
+		this.memosPaginator = forcePaginator;
 	};
 
 	sync = async () => {
 		log.info("Syncing daily memos...");
-		this.offset = 0;
 		this.downloadResource();
-		this.insertDailyMemos();
+		this.insertDailyMemos(this.memosPaginator);
 	};
 
 	syncForCurrentFile = async () => {
@@ -107,14 +103,19 @@ export class DailyMemos {
 
 		const file = view.file;
 
-		log.debug(`basename:${file.basename}
-		path:${file.path}
-		name:${file.name}
-		ext:${file.extension}
-		parent:${file.parent?.name}
-		stat:${file.stat.ctime}`);
+		const currentDate = getDateFromFile(file, "day")?.format("YYYY-MM-DD");
+		if (!currentDate) {
+			log.debug("Failed to get date from file.");
+			return;
+		}
+		const currentMomentMmemosPaginator = new MemosPaginator0191(
+			this.memosClient,
+			"",
+			(date) => date === currentDate
+		);
 
-		const currentMoment = getDateFromFile(file, "day");
+		this.downloadResource();
+		this.insertDailyMemos(currentMomentMmemosPaginator);
 	};
 
 	/**
@@ -195,76 +196,34 @@ export class DailyMemos {
 		}
 	};
 
-	private insertDailyMemos = async () => {
-		const records =
-			(await this.memosClient.listMemos(this.limit, this.offset)) || [];
+	private insertDailyMemos = async (memosPaginator: MemosPaginator0191) => {
+		const dailyNoteManager = new DailyNoteManager();
+		const lastTime = await memosPaginator.foreach(
+			async ([today, dailyMemosForToday]) => {
+				const momentDay = window.moment(today);
 
-		const mostRecentRecordTimeStamp = records[0]?.createdAt
-			? window.moment(records[0]?.createdAt).unix()
-			: records[0]?.createdTs;
+				const targetFile =
+					await dailyNoteManager.getOrCreateDailyNote(momentDay);
 
-		if (
-			!records.length ||
-			mostRecentRecordTimeStamp * 1000 < Number(this.lastTime)
-		) {
-			log.info("No new daily memos found.");
-			window.localStorage.setItem(this.localKey, Date.now().toString());
-			return;
-		}
+				// read daily note, modify the memos list
 
-		// generalize daily memos by day and timestamp
-		// map<date, map<timestamp, formattedRecord>>
-		const dailyMemosByDay: Record<string, Record<string, string>> = {};
-		for (const record of records) {
-			if (!record.content && !record.resourceList?.length) {
-				continue;
-			}
+				const originFileContent = await this.app.vault.read(targetFile);
 
-			const [date, timestamp, formattedRecord] =
-				formatDailyRecord(record);
-
-			if (!dailyMemosByDay[date]) {
-				dailyMemosByDay[date] = {};
-			}
-
-			dailyMemosByDay[date][timestamp] = formattedRecord;
-		}
-
-		await Promise.all(
-			Object.entries(dailyMemosByDay).map(
-				async ([today, dailyMemosForToday]) => {
-					const momentDay = window.moment(today);
-
-					const targetFile =
-						await this.dailyNoteManager.getOrCreateDailyNote(
-							momentDay
-						);
-
-					// read daily note, modify the memos list
-
-					const originFileContent = await this.app.vault.read(
-						targetFile
-					);
-
-					const modifiedFileContent = await this.modifyDailyNotes(
-						originFileContent,
-						today,
-						dailyMemosForToday
-					);
-					if (!modifiedFileContent) {
-						return;
-					}
-
-					await this.app.vault.modify(
-						targetFile,
-						modifiedFileContent
-					);
+				const modifiedFileContent = await this.modifyDailyNotes(
+					originFileContent,
+					today,
+					dailyMemosForToday
+				);
+				if (!modifiedFileContent) {
+					return;
 				}
-			)
+
+				await this.app.vault.modify(targetFile, modifiedFileContent);
+			}
 		);
 
-		this.offset = this.offset + this.limit;
-		this.insertDailyMemos(); // trailing recursion
+		log.info(`Synced daily memos, lastTime: ${lastTime}`);
+		window.localStorage.setItem(this.localKey, lastTime);
 	};
 
 	/**

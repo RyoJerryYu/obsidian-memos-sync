@@ -63,7 +63,14 @@ export class MemosPaginator0191 {
 	private offset: number;
 	private lastTime: string;
 
-	constructor(private client: MemosClient0191, lastTime?: string) {
+	constructor(
+		private client: MemosClient0191,
+		lastTime?: string,
+		private filter?: (
+			date: string,
+			dailyMemosForDate: Record<string, string>
+		) => boolean
+	) {
 		this.limit = 50;
 		this.offset = 0;
 		this.lastTime = lastTime || "";
@@ -80,6 +87,7 @@ export class MemosPaginator0191 {
 			Record<string, string> // daily memos for today, map<timestamp, content>
 		]) => Promise<void>
 	) => {
+		this.offset = 0; // iterate from newest, reset offset
 		while (true) {
 			const memos =
 				(await this.client.listMemos(this.limit, this.offset)) || [];
@@ -92,8 +100,11 @@ export class MemosPaginator0191 {
 				!memos.length ||
 				mostRecentRecordTimeStamp * 1000 < Number(this.lastTime)
 			) {
+				// bug if one memo pinned to top
+				// but it's not a big deal, use sync for current daily notes
 				log.info("No new daily memos found.");
-				return Date.now().toString();
+				this.lastTime = Date.now().toString();
+				return this.lastTime;
 			}
 
 			const dailyMemosByDay = this.generalizeDailyMemos(memos);
@@ -101,6 +112,9 @@ export class MemosPaginator0191 {
 			await Promise.all(
 				Object.entries(dailyMemosByDay).map(
 					async ([today, dailyMemosForToday]) => {
+						if (this.filter && !this.filter(today, dailyMemosForToday)){
+							return;
+						}
 						await handle([today, dailyMemosForToday]);
 					}
 				)
