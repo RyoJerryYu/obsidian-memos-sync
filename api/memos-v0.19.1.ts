@@ -20,7 +20,10 @@ export class MemosClient0191 {
 		});
 	}
 
-	listMemos = async (limit: number, offset: number) : Promise<DailyRecordType[] | undefined> => {
+	listMemos = async (
+		limit: number,
+		offset: number
+	): Promise<DailyRecordType[] | undefined> => {
 		try {
 			const { data } = await this.axios.get<
 				DailyRecordType[] | FetchError
@@ -42,7 +45,7 @@ export class MemosClient0191 {
 		} catch (error) {
 			log.error(`Failed to fetch daily memos: ${error}`);
 		}
-	}
+	};
 
 	listResources = async () => {
 		const { data } = await this.axios.get<ResourceType[] | FetchError>(

@@ -10,7 +10,7 @@ import {
 } from "obsidian";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { DailyMemos } from "services/DailyMemos";
+import { DailyMemos } from "services/DailyMemos/DailyMemos";
 import { PluginSettings } from "types/PluginSettings";
 
 // Remember to rename these classes and interfaces!
@@ -114,6 +114,11 @@ export default class MyPlugin extends Plugin {
 			id: "my-plugin-force-sync-daily-memos",
 			name: "Force sync daily memos",
 			callback: this.dailyMemos.forceSync,
+		});
+		this.addCommand({
+			id: "my-plugin-force-sync-current-daily-memos",
+			name: "Force sync current daily memos",
+			callback: this.dailyMemos.syncForCurrentFile,
 		});
 		// timeout
 		// interval

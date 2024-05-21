@@ -2,13 +2,20 @@ import {
 	createDailyNote,
 	getAllDailyNotes,
 	getDailyNote,
+	getDateFromFile,
 } from "obsidian-daily-notes-interface";
 import type { Moment } from "moment";
-import { App, TFile, normalizePath } from "obsidian";
+import { App, MarkdownView, TFile, normalizePath } from "obsidian";
 import { PluginSettings } from "types/PluginSettings";
 import { DailyRecordType, FetchError, ResourceType } from "types/usememos";
 import * as log from "utils/log";
 import { MemosClient0191 } from "api/memos-v0.19.1";
+import { generateFileName } from "./memos-util";
+import { MemosPaginator0191 } from "./MemosPaginator";
+
+function isBulletList(content: string) {
+	return /^([-*\u2022]|\d+\.) .*/.test(content);
+}
 
 function generateHeaderRegExp(header: string) {
 	const formattedHeader = /^#+/.test(header.trim())
@@ -17,76 +24,6 @@ function generateHeaderRegExp(header: string) {
 	const reg = new RegExp(`(${formattedHeader}[^\n]*)([\\s\\S]*?)(?=\\n#|$)`);
 
 	return reg;
-}
-
-function generateFileLink(resource: ResourceType): string {
-	if (!resource.externalLink) {
-		return `![[${generateFileName(resource)}]]`;
-	}
-
-	const prefix = resource.type?.includes("image") ? "!" : ""; // only add ! for image type
-
-	return `${prefix}[${resource.name || resource.filename}](${
-		resource.externalLink
-	})`;
-}
-
-function generateFileName(resource: ResourceType): string {
-	return `${resource.id}-${resource.filename.replace(/[/\\?%*:|"<>]/g, "-")}`;
-}
-
-function isBulletList(content: string) {
-	return /^([-*\u2022]|\d+\.) .*/.test(content);
-}
-
-function formatDailyRecord(record: DailyRecordType) {
-	const { createdTs, createdAt, content, resourceList } = record;
-	const timeStamp = createdAt ? window.moment(createdAt).unix() : createdTs;
-	const [date, time] = window
-		.moment(timeStamp * 1000)
-		.format("YYYY-MM-DD HH:mm")
-		.split(" ");
-	const [firstLine, ...otherLine] = content.trim().split("\n");
-	const isTask = /^- \[.*?\]/.test(firstLine); // 目前仅支持 task
-	const isCode = /```/.test(firstLine);
-
-	let targetFirstLine = "";
-
-	if (isTask) {
-		targetFirstLine = `- [ ] ${time} ${firstLine.replace(
-			/^- \[.*?\]/,
-			""
-		)}`;
-	} else if (isCode) {
-		targetFirstLine = `- ${time}`; // 首行不允许存在代码片段
-		otherLine.unshift(firstLine);
-	} else {
-		targetFirstLine = `- ${time} ${firstLine.replace(/^- /, "")}`;
-	}
-
-	targetFirstLine += ` #daily-record ^${timeStamp}`;
-
-	const targetOtherLine = otherLine?.length //剩余行
-		? "\n" +
-		  otherLine
-				.filter((line: string) => line.trim())
-				.map((line) => `\t${line}`)
-				.join("\n")
-				.trimEnd()
-		: "";
-	const targetResourceLine = resourceList?.length // 资源文件
-		? "\n" +
-		  resourceList
-				?.map(
-					(resource: ResourceType) =>
-						`\t- ${generateFileLink(resource)}`
-				)
-				.join("\n")
-		: "";
-	const finalTargetContent =
-		targetFirstLine + targetOtherLine + targetResourceLine;
-
-	return [date, timeStamp, finalTargetContent].map(String);
 }
 
 class DailyNoteManager {
@@ -115,12 +52,10 @@ class DailyNoteManager {
 export class DailyMemos {
 	private app: App;
 	private settings: PluginSettings;
-	private limit: number;
-	private offset: number;
-	private lastTime: string;
 	private localKey: string;
 	private memosClient: MemosClient0191;
 	private dailyNoteManager: DailyNoteManager;
+	private memosPaginator: MemosPaginator0191;
 
 	constructor(app: App, settings: PluginSettings) {
 		if (!settings.usememosAPI) {
@@ -133,16 +68,18 @@ export class DailyMemos {
 		this.app = app;
 		this.settings = settings;
 
-		this.localKey = `periodic-para-daily-record-last-time-${this.settings.usememosToken}`;
-		this.limit = 50;
-		this.offset = 0;
-		this.lastTime = window.localStorage.getItem(this.localKey) || "";
-
 		this.memosClient = new MemosClient0191(
 			this.settings.usememosAPI,
 			this.settings.usememosToken
 		);
 		this.dailyNoteManager = new DailyNoteManager();
+
+		this.localKey = `periodic-para-daily-record-last-time-${this.settings.usememosToken}`;
+		const lastTime = window.localStorage.getItem(this.localKey) || "";
+		this.memosPaginator = new MemosPaginator0191(
+			this.memosClient,
+			lastTime
+		);
 	}
 
 	forceSync = async () => {
@@ -157,11 +94,33 @@ export class DailyMemos {
 		this.insertDailyMemos();
 	};
 
+	syncForCurrentFile = async () => {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view) {
+			log.debug("No active view found.");
+			return;
+		}
+		if (!(view.file instanceof TFile)) {
+			log.debug("Active view is not a file.");
+			return;
+		}
+
+		const file = view.file;
+
+		log.debug(`basename:${file.basename}
+		path:${file.path}
+		name:${file.name}
+		ext:${file.extension}
+		parent:${file.parent?.name}
+		stat:${file.stat.ctime}`);
+
+		const currentMoment = getDateFromFile(file, "day");
+	};
+
 	/**
 	 * Download resources to attachments folder.
-	 * @returns {Promise<void>}
 	 */
-	private downloadResource = async () => {
+	private downloadResource = async (): Promise<void> => {
 		const { origin } = new URL(this.settings.usememosAPI);
 		try {
 			const data = await this.memosClient.listResources();
@@ -197,7 +156,6 @@ export class DailyMemos {
 						);
 						return;
 					}
-					this.settings;
 
 					const resourcePath = normalizePath(
 						`${folder}/${generateFileName(resource)}`
@@ -265,11 +223,11 @@ export class DailyMemos {
 			const [date, timestamp, formattedRecord] =
 				formatDailyRecord(record);
 
-			if (dailyMemosByDay[date]) {
-				dailyMemosByDay[date][timestamp] = formattedRecord;
-			} else {
-				dailyMemosByDay[date] = { [timestamp]: formattedRecord };
+			if (!dailyMemosByDay[date]) {
+				dailyMemosByDay[date] = {};
 			}
+
+			dailyMemosByDay[date][timestamp] = formattedRecord;
 		}
 
 		await Promise.all(
@@ -363,9 +321,16 @@ export class DailyMemos {
 			}
 		}
 
-		log.debug(`for ${today}\n\nfetchedRecordList: ${JSON.stringify({
-			from,to,prefix,suffix,localRecordList,existedRecordList
-		})}`);
+		log.debug(
+			`for ${today}\n\nfetchedRecordList: ${JSON.stringify({
+				from,
+				to,
+				prefix,
+				suffix,
+				localRecordList,
+				existedRecordList,
+			})}`
+		);
 
 		const sortedRecordList = Object.entries({
 			...fetchedRecordList,
