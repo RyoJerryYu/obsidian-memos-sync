@@ -534,17 +534,17 @@ obsidian-daily-notes-interface@^0.9.4:
     obsidian obsidianmd/obsidian-api#master
     tslib "2.1.0"
 
-"obsidian@github:obsidianmd/obsidian-api#master":
-  version "1.5.7"
-  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/8b2eda0f24285636c8aa116972643e5233a23dc1"
-  dependencies:
-    "@types/codemirror" "5.60.8"
-    moment "2.29.4"
-
 obsidian@latest:
   version "1.5.7-1"
   resolved "https://registry.yarnpkg.com/obsidian/-/obsidian-1.5.7-1.tgz#6e367f015f6a1b6b13204135434bbe3c04d4dfc3"
   integrity sha512-T5ZRuQ1FnfXqEoakTTHVDYvzUEEoT8zSPnQCW31PVgYwG4D4tZCQfKHN2hTz1ifnCe8upvwa6mBTAP2WUA5Vng==
+  dependencies:
+    "@types/codemirror" "5.60.8"
+    moment "2.29.4"
+
+obsidian@obsidianmd/obsidian-api#master:
+  version "1.5.7"
+  resolved "https://codeload.github.com/obsidianmd/obsidian-api/tar.gz/8b2eda0f24285636c8aa116972643e5233a23dc1"
   dependencies:
     "@types/codemirror" "5.60.8"
     moment "2.29.4"
