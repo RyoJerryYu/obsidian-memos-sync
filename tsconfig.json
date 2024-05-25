@@ -6,6 +6,8 @@
 		"module": "ESNext",
 		"target": "ES6",
 		"allowJs": true,
+		"esModuleInterop": false,
+		"allowSyntheticDefaultImports": true,
 		"noImplicitAny": true,
 		"moduleResolution": "node",
 		"importHelpers": true,
