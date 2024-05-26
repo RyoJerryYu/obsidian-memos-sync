@@ -6,8 +6,8 @@ import {
 } from "obsidian-daily-notes-interface";
 import type { Moment } from "moment";
 import { App, MarkdownView, TFile, normalizePath } from "obsidian";
-import { PluginSettings } from "types/PluginSettings";
-import * as log from "utils/log";
+import { PluginSettings } from "@/types/PluginSettings";
+import * as log from "@/utils/log";
 import { MemosPaginator } from "./MemosPaginator";
 import { DailyNoteModifier } from "./DailyNoteModifier";
 import { MemosResourceFetcher } from "./MemosResourceFetcher";
@@ -46,7 +46,7 @@ export class DailyMemos {
 	private memosResourceFetcher: MemosResourceFetcher;
 
 	constructor(app: App, settings: PluginSettings) {
-		if (!settings.usememosAPI) {
+		if (!settings.memosAPIURL) {
 			log.error(
 				"Please set the usememosAPI setting in the plugin settings."
 			);
@@ -58,7 +58,7 @@ export class DailyMemos {
 
 		this.memosFactory = new MemosAbstractFactory(this.settings);
 
-		this.localKey = `periodic-para-daily-record-last-time-${this.settings.usememosToken}`;
+		this.localKey = `periodic-para-daily-record-last-time-${this.settings.memosAPIToken}`;
 		const lastTime = window.localStorage.getItem(this.localKey) || "";
 		this.memosPaginator = this.memosFactory.createMemosPaginator(lastTime);
 		this.memosResourceFetcher = this.memosFactory.createResourceFetcher();
@@ -122,7 +122,7 @@ export class DailyMemos {
 	 * Download resources to attachments folder.
 	 */
 	private downloadResource = async (): Promise<void> => {
-		const { origin } = new URL(this.settings.usememosAPI);
+		const { origin } = new URL(this.settings.memosAPIURL);
 		const data = await this.memosResourceFetcher.listResources();
 
 		if (!data) {

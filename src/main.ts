@@ -7,20 +7,23 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	SliderComponent,
+	setTooltip,
 } from "obsidian";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { DailyMemos } from "services/DailyMemos/DailyMemos";
-import { PluginSettings } from "types/PluginSettings";
+import { DailyMemos } from "@/services/DailyMemos/DailyMemos";
+import { PluginSettings } from "@/types/PluginSettings";
+import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 
 // Remember to rename these classes and interfaces!
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	dailyMemosHeader: "Memos",
-	usememosAPI: "https://usememos.com/api/v1",
-	usememosToken: "",
-	attachmentFolder: "Attachments",
 	memosAPIVersion: "v0.19.1",
+	memosAPIURL: "https://usememos.com",
+	memosAPIToken: "",
+	attachmentFolder: "Attachments",
 };
 
 export default class MyPlugin extends Plugin {
@@ -74,23 +77,8 @@ export default class MyPlugin extends Plugin {
 	};
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.setText("Woah!");
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
-}
-
 class SampleSettingTab extends PluginSettingTab {
+	app: App;
 	plugin: MyPlugin;
 
 	constructor(app: App, plugin: MyPlugin) {
@@ -108,7 +96,24 @@ class SampleSettingTab extends PluginSettingTab {
 
 	display(): void {
 		this.containerEl.empty();
-		this.containerEl.createEl("h3", { text: "Settings for My Plugin." });
+		const dailyNotesEnabled = appHasDailyNotesPluginLoaded();
+		if (!dailyNotesEnabled) {
+			this.containerEl.createEl("h3", {
+				text: "Attention: Daily Notes is not enabled.",
+				attr: {
+					style: "color: red",
+				}
+			});
+			this.containerEl.createEl("p", {
+				text: "Daily Notes feature is not enabled. Please enable the official Daily Notes plugin or daily notes feature in Periodic Notes plugin. Otherwise, this plugin will not work properly.",
+				attr: {
+					style: "color: red",
+				}
+			})
+			
+		}
+
+		this.containerEl.createEl("h3", { text: "Settings for Memos Sync" });
 
 		new Setting(this.containerEl)
 			.setName("Daily Memos Header")
@@ -122,48 +127,6 @@ class SampleSettingTab extends PluginSettingTab {
 					});
 				});
 			});
-		
-		new Setting(this.containerEl)
-		.setName("Memos API Version")
-		.setDesc("Memos API Version")
-		.addDropdown((dropDown)=>{
-			dropDown.addOptions({
-				"v0.19.1": "before v0.21.x",
-				"v0.22.0": "after v0.22.x",
-			});
-			dropDown.setValue(this.plugin.settings.memosAPIVersion);
-			dropDown.onChange((value) => {
-				this.saveSettings({
-					memosAPIVersion: value as "v0.19.1" | "v0.22.0",
-				});
-			})
-		})
-
-		new Setting(this.containerEl)
-			.setName("Usememos API URL")
-			.setDesc("Usememos API URL, e.g. http://localhost:5230")
-			.addText((textfield) => {
-				textfield.setPlaceholder(DEFAULT_SETTINGS.usememosAPI);
-				textfield.setValue(this.plugin.settings.usememosAPI);
-				textfield.onChange((value) => {
-					this.saveSettings({
-						usememosAPI: value,
-					});
-				});
-			});
-
-		new Setting(this.containerEl)
-			.setName("Usememos Token")
-			.setDesc("Usememos token.")
-			.addText((textfield) => {
-				textfield.setPlaceholder(DEFAULT_SETTINGS.usememosToken);
-				textfield.setValue(this.plugin.settings.usememosToken);
-				textfield.onChange((value) => {
-					this.saveSettings({
-						usememosToken: value,
-					});
-				});
-			});
 
 		new Setting(this.containerEl)
 			.setName("Attachment Folder")
@@ -174,6 +137,48 @@ class SampleSettingTab extends PluginSettingTab {
 				textfield.onChange((value) => {
 					this.saveSettings({
 						attachmentFolder: value,
+					});
+				});
+			});
+
+		new Setting(this.containerEl)
+			.setName("Memos API Version")
+			.setDesc("Memos API Version")
+			.addDropdown((dropDown) => {
+				dropDown.addOptions({
+					"v0.19.1": "before v0.21.x",
+					"v0.22.0": "after v0.22.x",
+				});
+				dropDown.setValue(this.plugin.settings.memosAPIVersion);
+				dropDown.onChange((value) => {
+					this.saveSettings({
+						memosAPIVersion: value as "v0.19.1" | "v0.22.0",
+					});
+				});
+			});
+
+		new Setting(this.containerEl)
+			.setName("Memos API URL")
+			.setDesc("Memos API URL, e.g. http://localhost:5230")
+			.addText((textfield) => {
+				textfield.setPlaceholder(DEFAULT_SETTINGS.memosAPIURL);
+				textfield.setValue(this.plugin.settings.memosAPIURL);
+				textfield.onChange((value) => {
+					this.saveSettings({
+						memosAPIURL: value,
+					});
+				});
+			});
+
+		new Setting(this.containerEl)
+			.setName("Memos API Token")
+			.setDesc("Memos API token.")
+			.addText((textfield) => {
+				textfield.setPlaceholder(DEFAULT_SETTINGS.memosAPIToken);
+				textfield.setValue(this.plugin.settings.memosAPIToken);
+				textfield.onChange((value) => {
+					this.saveSettings({
+						memosAPIToken: value,
 					});
 				});
 			});

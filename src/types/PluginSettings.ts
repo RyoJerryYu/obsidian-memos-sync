@@ -4,20 +4,19 @@ export interface PluginSettings {
 	 */
 	dailyMemosHeader: string;
 	/**
-	 * Usememos API URL. Should be like `https://api.usememos.com/api/v1`.
-	 */
-	usememosAPI: string;
-	/**
-	 * Usememos token.
-	 */
-	usememosToken: string;
-	/**
 	 * The folder for attachments.
 	 */
 	attachmentFolder: string;
-
 	/**
 	 * Memos Version, for using different version of memos API.
 	 */
 	memosAPIVersion: "v0.22.0" | "v0.19.1";
+	/**
+	 * Usememos API URL. Should be like `https://api.usememos.com/api/v1`.
+	 */
+	memosAPIURL: string;
+	/**
+	 * Usememos token.
+	 */
+	memosAPIToken: string;
 }

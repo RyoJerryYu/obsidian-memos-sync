@@ -1,11 +1,11 @@
 {
-	"id": "ryo-usememos-sync",
+	"id": "obsidian-memos-sync",
 	"name": "Memos Sync",
-	"version": "1.0.0",
+	"version": "0.3.0",
 	"minAppVersion": "0.15.0",
-	"description": "Syncing Memos to Obsidian daily note. Fully compatible with official Daily Notes plugin, Calendar plugin and Periodic Notes plugin.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"description": "Syncing memos from a [Memos](https://github.com/usememos/memos) server to Obsidian daily note. Fully compatible with official Daily Notes plugin, Calendar plugin and Periodic Notes plugin.",
+	"author": "RyoJerryYu",
+	"authorUrl": "https://github.com/RyoJerryYu",
+	"isDesktopOnly": true,
+	"js": "main.js"
 }

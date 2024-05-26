@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import * as log from "utils/log";
+import * as log from "@/utils/log";
 
 export type ResourceType = {
 	name?: string;
