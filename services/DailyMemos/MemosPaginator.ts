@@ -7,16 +7,38 @@ import { Memo } from "api/memos-proto-v0.22.1/gen/api/v1/memo_service";
 import { Resource } from "api/memos-proto-v0.22.1/gen/api/v1/resource_service";
 import { PluginSettings } from "types/PluginSettings";
 
+type APIMemoParam = {
+	/**
+	 * created at or udpated at for the memo, for identifying the memo
+	 * for identifying the memo, sorting, and decide which daily note to place in
+	 */
+	timestamp: number;
+	/**
+	 * content of the memo
+	 */
+	content: string;
+	/**
+	 * resources for the memo
+	 * for generating file link
+	 */
+	resources?: ResourceType[];
+};
+type MdItemMemo = {
+	date: string; // date for which daily memo to place
+	timestamp: string; // timestamp for identifying the memo
+	content: string; // content of the memo
+};
+
 /**
- *
- * @param record fetch from usememos API
- * @returns [date, timestamp, finalTargetContent], date in format "YYYY-MM-DD", timestamp is unix timestamp
+ * transformAPIToMdItemMemo
+ * transform API returned memo to md item.
+ * It will find all resources and generate file link.
+ * @param param APIMemoParam
  */
-function formatDailyRecord0191(record: DailyRecordType): [string, string, string] {
-	const { createdTs, createdAt, content, resourceList } = record;
-	const timeStamp = createdAt ? window.moment(createdAt).unix() : createdTs;
+function transformAPIToMdItemMemo(param: APIMemoParam): MdItemMemo {
+	const { timestamp, content, resources } = param;
 	const [date, time] = window
-		.moment(timeStamp * 1000)
+		.moment(timestamp * 1000)
 		.format("YYYY-MM-DD HH:mm")
 		.split(" ");
 	const [firstLine, ...otherLine] = content.trim().split("\n");
@@ -37,7 +59,7 @@ function formatDailyRecord0191(record: DailyRecordType): [string, string, string
 		targetFirstLine = `- ${time} ${firstLine.replace(/^- /, "")}`;
 	}
 
-	targetFirstLine += ` #daily-record ^${timeStamp}`;
+	targetFirstLine += ` #daily-record ^${timestamp}`;
 
 	const targetOtherLine = otherLine?.length //剩余行
 		? "\n" +
@@ -47,9 +69,9 @@ function formatDailyRecord0191(record: DailyRecordType): [string, string, string
 				.join("\n")
 				.trimEnd()
 		: "";
-	const targetResourceLine = resourceList?.length // 资源文件
+	const targetResourceLine = resources?.length // 资源文件
 		? "\n" +
-		  resourceList
+		  resources
 				?.map(
 					(resource: ResourceType) =>
 						`\t- ${generateFileLink(resource)}`
@@ -59,7 +81,11 @@ function formatDailyRecord0191(record: DailyRecordType): [string, string, string
 	const finalTargetContent =
 		targetFirstLine + targetOtherLine + targetResourceLine;
 
-	return [date, String(timeStamp), finalTargetContent];
+	return {
+		date,
+		timestamp: String(timestamp),
+		content: finalTargetContent,
+	};
 }
 
 export type MemosPaginator = {
@@ -107,7 +133,6 @@ export class MemosPaginatorFactory {
 	};
 }
 
-
 class MemosPaginator0191 {
 	private limit: number;
 	private offset: number;
@@ -152,7 +177,7 @@ class MemosPaginator0191 {
 			) {
 				// bug if one memo pinned to top
 				// but it's not a big deal, use sync for current daily notes
-				log.info("No new daily memos found.");
+				log.debug("No new daily memos found.");
 				this.lastTime = Date.now().toString();
 				return this.lastTime;
 			}
@@ -187,13 +212,23 @@ class MemosPaginator0191 {
 				continue;
 			}
 
-			const [date, timestamp, formattedRecord] = formatDailyRecord0191(memo);
+			const { createdTs, createdAt } = memo;
+			const timestampInput = createdAt
+				? window.moment(createdAt).unix()
+				: createdTs;
 
-			if (!dailyMemosByDay[date]) {
-				dailyMemosByDay[date] = {};
+			const mdItemMemo = transformAPIToMdItemMemo({
+				timestamp: timestampInput,
+				content: memo.content,
+				resources: memo.resourceList,
+			});
+
+			if (!dailyMemosByDay[mdItemMemo.date]) {
+				dailyMemosByDay[mdItemMemo.date] = {};
 			}
 
-			dailyMemosByDay[date][timestamp] = formattedRecord;
+			dailyMemosByDay[mdItemMemo.date][mdItemMemo.timestamp] =
+				mdItemMemo.content;
 		}
 		return dailyMemosByDay;
 	};
@@ -236,7 +271,7 @@ class MemosPaginator0220 {
 				filter: "",
 			});
 			if (!resp) {
-				log.info("No new daily memos found.");
+				log.debug("No new daily memos found.");
 				this.lastTime = Date.now().toString();
 				return this.lastTime;
 			}
@@ -252,7 +287,7 @@ class MemosPaginator0220 {
 			) {
 				// bug if one memo pinned to top
 				// but it's not a big deal, use sync for current daily notes
-				log.info("No new daily memos found.");
+				log.debug("No new daily memos found.");
 				this.lastTime = Date.now().toString();
 				return this.lastTime;
 			}
@@ -290,70 +325,26 @@ class MemosPaginator0220 {
 				continue;
 			}
 
-			const [date, timestamp, formattedRecord] =
-				formatDailyRecord0221(memo);
+			const resources = memo.resources?.map((resource) => ({
+				id: resource.uid,
+				externalLink: resource.externalLink,
+				filename: resource.filename,
+				name: resource.name,
+			}));
 
-			if (!dailyMemosByDay[date]) {
-				dailyMemosByDay[date] = {};
+			const mdItemMemo = transformAPIToMdItemMemo({
+				timestamp: window.moment(memo.createTime).unix(),
+				content: memo.content,
+				resources: resources,
+			});
+
+			if (!dailyMemosByDay[mdItemMemo.date]) {
+				dailyMemosByDay[mdItemMemo.date] = {};
 			}
 
-			dailyMemosByDay[date][timestamp] = formattedRecord;
+			dailyMemosByDay[mdItemMemo.date][mdItemMemo.timestamp] =
+				mdItemMemo.content;
 		}
 		return dailyMemosByDay;
 	};
-}
-
-function formatDailyRecord0221(memo: Memo): [string, string, string] {
-	const { createTime, content, resources } = memo;
-	const timeStamp = window.moment(createTime).unix();
-	const [date, time] = window
-		.moment(timeStamp * 1000)
-		.format("YYYY-MM-DD HH:mm")
-		.split(" ");
-	const [firstLine, ...otherLine] = content.trim().split("\n");
-	const isTask = /^- \[.*?\]/.test(firstLine); // 目前仅支持 task
-	const isCode = /```/.test(firstLine);
-
-	let targetFirstLine = "";
-
-	if (isTask) {
-		targetFirstLine = `- [ ] ${time} ${firstLine.replace(
-			/^- \[.*?\]/,
-			""
-		)}`;
-	} else if (isCode) {
-		targetFirstLine = `- ${time}`; // 首行不允许存在代码片段
-		otherLine.unshift(firstLine);
-	} else {
-		targetFirstLine = `- ${time} ${firstLine.replace(/^- /, "")}`;
-	}
-
-	targetFirstLine += ` #daily-record ^${timeStamp}`;
-
-	const targetOtherLine = otherLine?.length //剩余行
-		? "\n" +
-		  otherLine
-				.filter((line: string) => line.trim())
-				.map((line) => `\t${line}`)
-				.join("\n")
-				.trimEnd()
-		: "";
-	const targetResourceLine = resources?.length // 资源文件
-		? "\n" +
-		  resources
-				?.map(
-					(resource: Resource) =>
-						`\t- ${generateFileLink({
-							id: resource.uid,
-							externalLink: resource.externalLink,
-							filename: resource.filename,
-							name: resource.name,
-						})}`
-				)
-				.join("\n")
-		: "";
-	const finalTargetContent =
-		targetFirstLine + targetOtherLine + targetResourceLine;
-
-	return [date, String(timeStamp), finalTargetContent];
 }

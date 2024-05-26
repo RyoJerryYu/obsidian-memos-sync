@@ -7,7 +7,6 @@ import {
 import type { Moment } from "moment";
 import { App, MarkdownView, TFile, normalizePath } from "obsidian";
 import { PluginSettings } from "types/PluginSettings";
-import { DailyRecordType, FetchError, ResourceType } from "types/memos-v0.19.1-types";
 import * as log from "utils/log";
 import { MemosClient0191 } from "api/memos-v0.19.1";
 import { generateFileName } from "./memos-util";

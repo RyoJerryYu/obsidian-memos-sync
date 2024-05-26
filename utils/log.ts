@@ -1,4 +1,11 @@
 import { Component, MarkdownRenderer, Notice, TFile, moment } from "obsidian";
+
+
+/**
+ * Build environment, defined in esbuild.config.mjs
+ */
+const env: "production" | "development" = process.env.BUILD_ENV as any || "production";
+
 export enum LogLevel {
 	"debug",
 	"info",
@@ -6,6 +13,7 @@ export enum LogLevel {
 	"error",  
 }
 export function debug(msg:string) {
+	if (env === "production") return;
 	console.debug(msg);
 }
 export function info(msg: string) {
