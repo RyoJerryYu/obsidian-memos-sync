@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { DailyRecordType, FetchError, ResourceType } from "types/usememos";
+import { DailyRecordType, FetchError, ResourceType } from "types/memos-v0.19.1-types";
 import * as log from "utils/log";
 
 export class MemosClient0191 {

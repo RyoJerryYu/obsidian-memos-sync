@@ -1,4 +1,4 @@
-import { ResourceType } from "types/usememos";
+import { ResourceType } from "types/memos-v0.19.1-types";
 
 
 export function generateFileName(resource: ResourceType): string {

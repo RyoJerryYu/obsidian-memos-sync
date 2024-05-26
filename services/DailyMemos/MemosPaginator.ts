@@ -1,6 +1,6 @@
 import { MemosClient0191 } from "api/memos-v0.19.1";
 import * as log from "utils/log";
-import { DailyRecordType, ResourceType } from "types/usememos";
+import { DailyRecordType, ResourceType } from "types/memos-v0.19.1-types";
 import { generateFileLink } from "./memos-util";
 import { MemosClient0210 } from "api/memos-v0.22.1";
 import { Memo } from "api/memos-proto-v0.22.1/gen/api/v1/memo_service";
@@ -12,7 +12,7 @@ import { PluginSettings } from "types/PluginSettings";
  * @param record fetch from usememos API
  * @returns [date, timestamp, finalTargetContent], date in format "YYYY-MM-DD", timestamp is unix timestamp
  */
-function formatDailyRecord(record: DailyRecordType): [string, string, string] {
+function formatDailyRecord0191(record: DailyRecordType): [string, string, string] {
 	const { createdTs, createdAt, content, resourceList } = record;
 	const timeStamp = createdAt ? window.moment(createdAt).unix() : createdTs;
 	const [date, time] = window
@@ -187,7 +187,7 @@ class MemosPaginator0191 {
 				continue;
 			}
 
-			const [date, timestamp, formattedRecord] = formatDailyRecord(memo);
+			const [date, timestamp, formattedRecord] = formatDailyRecord0191(memo);
 
 			if (!dailyMemosByDay[date]) {
 				dailyMemosByDay[date] = {};
