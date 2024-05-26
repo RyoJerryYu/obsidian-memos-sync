@@ -11,8 +11,8 @@ import { DailyRecordType, FetchError, ResourceType } from "types/usememos";
 import * as log from "utils/log";
 import { MemosClient0191 } from "api/memos-v0.19.1";
 import { generateFileName } from "./memos-util";
-import { MemosPaginator0191 } from "./MemosPaginator";
-import { DailyNoteModifier } from "./DailyNoteModifierRegex";
+import { MemosPaginator, MemosPaginatorFactory } from "./MemosPaginator";
+import { DailyNoteModifier } from "./DailyNoteModifier";
 
 class DailyNoteManager {
 	private allDailyNotes: Record<string, TFile>;
@@ -42,7 +42,8 @@ export class DailyMemos {
 	private settings: PluginSettings;
 	private localKey: string;
 	private memosClient: MemosClient0191;
-	private memosPaginator: MemosPaginator0191;
+	private memosPaginatorFactory: MemosPaginatorFactory;
+	private memosPaginator: MemosPaginator;
 
 	constructor(app: App, settings: PluginSettings) {
 		if (!settings.usememosAPI) {
@@ -62,26 +63,38 @@ export class DailyMemos {
 
 		this.localKey = `periodic-para-daily-record-last-time-${this.settings.usememosToken}`;
 		const lastTime = window.localStorage.getItem(this.localKey) || "";
-		this.memosPaginator = new MemosPaginator0191(
-			this.memosClient,
-			lastTime
-		);
+		this.memosPaginatorFactory = new MemosPaginatorFactory(this.settings);
+		this.memosPaginator =
+			this.memosPaginatorFactory.createMemosPaginator(lastTime);
 	}
 
+	/**
+	 * Force syncing daily memos, ignore the lastTime.
+	 * After syncing, save the lastTime to localStorage, and reload the memosPaginator.
+	 */
 	forceSync = async () => {
 		log.info("Force syncing daily memos...");
-		const forcePaginator = new MemosPaginator0191(this.memosClient, "");
+		const forcePaginator =
+			this.memosPaginatorFactory.createMemosPaginator("");
 		this.downloadResource();
 		this.insertDailyMemos(forcePaginator);
 		this.memosPaginator = forcePaginator;
 	};
 
+	/**
+	 * Sync daily memos, only sync the memos after the lastTime.
+	 * After syncing, save the lastTime to localStorage.
+	 */
 	sync = async () => {
 		log.info("Syncing daily memos...");
 		this.downloadResource();
 		this.insertDailyMemos(this.memosPaginator);
 	};
 
+	/**
+	 * Sync daily memos for the current daily note file.
+	 * If the current file is not a daily note, do nothing.
+	 */
 	syncForCurrentFile = async () => {
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) {
@@ -100,11 +113,11 @@ export class DailyMemos {
 			log.debug("Failed to get date from file.");
 			return;
 		}
-		const currentMomentMmemosPaginator = new MemosPaginator0191(
-			this.memosClient,
-			"",
-			(date) => date === currentDate
-		);
+		const currentMomentMmemosPaginator =
+			this.memosPaginatorFactory.createMemosPaginator(
+				"",
+				(date) => date === currentDate
+			);
 
 		this.downloadResource();
 		this.insertDailyMemos(currentMomentMmemosPaginator);
@@ -188,7 +201,7 @@ export class DailyMemos {
 		}
 	};
 
-	private insertDailyMemos = async (memosPaginator: MemosPaginator0191) => {
+	private insertDailyMemos = async (memosPaginator: MemosPaginator) => {
 		const dailyNoteManager = new DailyNoteManager();
 		const dailyNoteModifier = new DailyNoteModifier(
 			this.settings.dailyMemosHeader

@@ -29,7 +29,7 @@ export class MemosClient0210 {
 	private memoCli: Client<MemoServiceDefinition>;
 
 	constructor(
-		private endpoint: string, // http://localhost:5230/
+		private endpoint: string, // http://localhost:5230
 		private token: string
 	) {
 		const channel = createChannel(
@@ -38,14 +38,15 @@ export class MemosClient0210 {
 				credentials: "include",
 			})
 		);
-		const clientFactory = createClientFactory().use((call, options) =>
-			call.next(call.request, {
-				...options,
-				metadata: Metadata(options.metadata).set(
-					"authorization",
-					`Bearer ${token}`
-				),
-			})!
+		const clientFactory = createClientFactory().use(
+			(call, options) =>
+				call.next(call.request, {
+					...options,
+					metadata: Metadata(options.metadata).set(
+						"authorization",
+						`Bearer ${token}`
+					),
+				})!
 		);
 
 		this.memoCli = clientFactory.create(MemoServiceDefinition, channel);
@@ -53,7 +54,8 @@ export class MemosClient0210 {
 
 	listMemos = async (req: ListMemosRequest) => {
 		try {
-			const { memos } = await this.memoCli.listMemos(req);
+			const resp = await this.memoCli.listMemos(req);
+			return resp;
 		} catch (error) {
 			log.error(`Failed to fetch daily memos: ${error}`);
 		}

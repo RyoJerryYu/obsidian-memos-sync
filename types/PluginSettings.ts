@@ -15,4 +15,9 @@ export interface PluginSettings {
 	 * The folder for attachments.
 	 */
 	attachmentFolder: string;
+
+	/**
+	 * Memos Version, for using different version of memos API.
+	 */
+	memosAPIVersion: "v0.22.1" | "v0.19.1";
 }
