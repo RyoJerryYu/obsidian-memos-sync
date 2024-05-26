@@ -1,17 +1,39 @@
 import axios, { AxiosInstance } from "axios";
-import { DailyRecordType, FetchError, ResourceType } from "types/usememos";
 import * as log from "utils/log";
 
+export type ResourceType = {
+	name?: string;
+	externalLink?: string;
+	type?: string;
+	uid?: string;
+	id: string;
+	filename: string;
+};
+
+export type DailyRecordType = {
+	rowStatus: "ARCHIVED" | "ACTIVE" | "NORMAL";
+	updatedTs: number;
+	createdTs: number;
+	createdAt: string;
+	updatedAt: string;
+	content: string;
+	resourceList?: ResourceType[];
+};
+
+export type FetchError = {
+	code: number;
+	message: string;
+	msg?: string;
+	error?: string;
+};
+
 export class MemosClient0191 {
-	private origin: string;
 	private axios: AxiosInstance;
 
 	constructor(
-		private endpoint: string, // http://localhost:5230/api/v1
+		private endpoint: string, // http://localhost:5230
 		private token: string
 	) {
-		const { origin } = new URL(endpoint);
-		this.origin = origin;
 		this.axios = axios.create({
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -27,7 +49,7 @@ export class MemosClient0191 {
 		try {
 			const { data } = await this.axios.get<
 				DailyRecordType[] | FetchError
-			>(this.endpoint + `/memo`, {
+			>(this.endpoint + `/api/v1/memo`, {
 				params: {
 					limit: limit,
 					offset: offset,
@@ -49,7 +71,7 @@ export class MemosClient0191 {
 
 	listResources = async () => {
 		const { data } = await this.axios.get<ResourceType[] | FetchError>(
-			this.endpoint + `/resource`
+			this.endpoint + `/api/v1/resource`
 		);
 		return data;
 	};
@@ -59,7 +81,7 @@ export class MemosClient0191 {
 	 * @returns ArrayBuffer of the resource that could write into a file
 	 */
 	getResourceBuffer = async (resource: ResourceType) => {
-		const resourceURL = `${this.origin}/o/r/${
+		const resourceURL = `${this.endpoint}/o/r/${
 			resource.uid || resource.name || resource.id
 		}`;
 		const { data } = await this.axios.get(resourceURL, {

@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	usememosAPI: "https://usememos.com/api/v1",
 	usememosToken: "",
 	attachmentFolder: "Attachments",
+	memosAPIVersion: "v0.19.1",
 };
 
 export default class MyPlugin extends Plugin {
@@ -121,10 +122,26 @@ class SampleSettingTab extends PluginSettingTab {
 					});
 				});
 			});
+		
+		new Setting(this.containerEl)
+		.setName("Memos API Version")
+		.setDesc("Memos API Version")
+		.addDropdown((dropDown)=>{
+			dropDown.addOptions({
+				"v0.19.1": "before v0.21.x",
+				"v0.22.0": "after v0.22.x",
+			});
+			dropDown.setValue(this.plugin.settings.memosAPIVersion);
+			dropDown.onChange((value) => {
+				this.saveSettings({
+					memosAPIVersion: value as "v0.19.1" | "v0.22.0",
+				});
+			})
+		})
 
 		new Setting(this.containerEl)
 			.setName("Usememos API URL")
-			.setDesc("Usememos API URL.")
+			.setDesc("Usememos API URL, e.g. http://localhost:5230")
 			.addText((textfield) => {
 				textfield.setPlaceholder(DEFAULT_SETTINGS.usememosAPI);
 				textfield.setValue(this.plugin.settings.usememosAPI);
