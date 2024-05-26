@@ -1,7 +1,7 @@
 {
 	"id": "ryo-usememos-sync",
 	"name": "Memos Sync",
-	"version": "1.0.0",
+	"version": "0.3.0",
 	"minAppVersion": "0.15.0",
 	"description": "Syncing Memos to Obsidian daily note. Fully compatible with official Daily Notes plugin, Calendar plugin and Periodic Notes plugin.",
 	"author": "Obsidian",
