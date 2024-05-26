@@ -1,10 +1,6 @@
 import { MemosClient0191 } from "api/memos-v0.19.1";
-import { Client } from "nice-grpc-web";
 import * as log from "utils/log";
-import {
-	ResourceServiceDefinition,
-} from "../../api/memos-proto-v0.22.1/gen/api/v1/resource_service";
-import { ResourceCli, newClients } from "api/memos-v0.22.1";
+import { ResourceCli, newClients } from "api/memos-v0.22.0";
 import { APIResource, convert0220ResourceToAPIResource } from "./MemosResource";
 
 export type MemosResourceFetcher = {
@@ -55,15 +51,8 @@ export class MemosResourceFetcher0191 {
 	};
 }
 
-export class MemosResourceFetcher0210 {
+export class MemosResourceFetcher0220 {
 	constructor(private resourceCli: ResourceCli) {}
-	static new(
-		endpoint: string, // http://localhost:5230
-		token: string
-	): MemosResourceFetcher0210 {
-		const { resourceCli } = newClients(endpoint, token);
-		return new MemosResourceFetcher0210(resourceCli);
-	}
 
 	listResources = async (): Promise<APIResource[] | undefined> => {
 		try {

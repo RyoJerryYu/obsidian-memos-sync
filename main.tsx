@@ -128,13 +128,13 @@ class SampleSettingTab extends PluginSettingTab {
 		.setDesc("Memos API Version")
 		.addDropdown((dropDown)=>{
 			dropDown.addOptions({
-				"v0.19.1": "v0.19.1",
-				"v0.22.1": "v0.22.1",
+				"v0.19.1": "before v0.21.x",
+				"v0.22.0": "after v0.22.x",
 			});
 			dropDown.setValue(this.plugin.settings.memosAPIVersion);
 			dropDown.onChange((value) => {
 				this.saveSettings({
-					memosAPIVersion: value as "v0.19.1" | "v0.22.1",
+					memosAPIVersion: value as "v0.19.1" | "v0.22.0",
 				});
 			})
 		})

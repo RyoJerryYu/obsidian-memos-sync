@@ -4,12 +4,12 @@ import {
 	MemosPaginator0191,
 	MemosPaginator0220,
 } from "./MemosPaginator";
-import { MemoCli, ResourceCli, newClients } from "api/memos-v0.22.1";
+import { MemoCli, ResourceCli, newClients } from "api/memos-v0.22.0";
 import { MemosClient0191 } from "api/memos-v0.19.1";
 import {
 	MemosResourceFetcher,
 	MemosResourceFetcher0191,
-	MemosResourceFetcher0210,
+	MemosResourceFetcher0220,
 } from "./MemosResourceFetcher";
 
 /**
@@ -22,13 +22,13 @@ export class MemosAbstractFactory {
 	private inner: MemosFactory;
 
 	constructor(private settings: PluginSettings) {
-		if (this.settings.memosAPIVersion === "v0.22.1") {
+		if (this.settings.memosAPIVersion === "v0.22.0") {
 			const { memoCli, resourceCli } = newClients(
 				this.settings.usememosAPI,
 				this.settings.usememosToken
 			);
 
-			this.inner = new MemosFactory0210(this.settings);
+			this.inner = new MemosFactory0220(this.settings);
 			return;
 		}
 
@@ -85,7 +85,7 @@ class MemosFactory0191 {
 	};
 }
 
-class MemosFactory0210 {
+class MemosFactory0220 {
 	private memoCli: MemoCli;
 	private resourceCli: ResourceCli;
 	constructor(private settings: PluginSettings) {
@@ -109,6 +109,6 @@ class MemosFactory0210 {
 	};
 
 	createResourceFetcher = () => {
-		return new MemosResourceFetcher0210(this.resourceCli);
+		return new MemosResourceFetcher0220(this.resourceCli);
 	};
 }

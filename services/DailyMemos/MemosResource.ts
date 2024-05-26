@@ -1,4 +1,4 @@
-import { Resource } from "api/memos-proto-v0.22.1/gen/api/v1/resource_service";
+import { Resource } from "api/memos-proto-v0.22.0/gen/api/v1/resource_service";
 
 export type APIResource = {
 	name?: string;

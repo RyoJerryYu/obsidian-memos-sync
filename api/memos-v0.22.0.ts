@@ -4,24 +4,14 @@ import {
 	FetchTransport,
 	Client,
 	Metadata,
-	Channel,
-	ClientFactory,
 } from "nice-grpc-web";
-import axios, { AxiosInstance } from "axios";
-import * as log from "utils/log";
-import {
-	ListMemosRequest,
-	MemoServiceDefinition,
-} from "./memos-proto-v0.22.1/gen/api/v1/memo_service";
-import { ResourceServiceDefinition } from "./memos-proto-v0.22.1/gen/api/v1/resource_service";
+import { MemoServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/memo_service";
+import { ResourceServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/resource_service";
 
 export type MemoCli = Client<MemoServiceDefinition>;
 export type ResourceCli = Client<ResourceServiceDefinition>;
 
-export function newClients(
-	endpoint: string,
-	token: string
-) {
+export function newClients(endpoint: string, token: string) {
 	const channel = createChannel(
 		endpoint,
 		FetchTransport({
@@ -40,7 +30,13 @@ export function newClients(
 	);
 
 	return {
-		memoCli: clientFactory.create(MemoServiceDefinition, channel) as MemoCli,
-		resourceCli: clientFactory.create(ResourceServiceDefinition, channel) as ResourceCli,
+		memoCli: clientFactory.create(
+			MemoServiceDefinition,
+			channel
+		) as MemoCli,
+		resourceCli: clientFactory.create(
+			ResourceServiceDefinition,
+			channel
+		) as ResourceCli,
 	};
 }

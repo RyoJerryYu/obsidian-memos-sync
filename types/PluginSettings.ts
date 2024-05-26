@@ -19,5 +19,5 @@ export interface PluginSettings {
 	/**
 	 * Memos Version, for using different version of memos API.
 	 */
-	memosAPIVersion: "v0.22.1" | "v0.19.1";
+	memosAPIVersion: "v0.22.0" | "v0.19.1";
 }

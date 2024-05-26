@@ -1,2 +1,2 @@
-cd ./api/memos-proto-v0.22.1/
+cd ./api/memos-proto-v0.22.0/
 buf generate
