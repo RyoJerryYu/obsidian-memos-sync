@@ -1,13 +1,15 @@
-import { MemosClient0191 } from "api/memos-v0.19.1";
+import { DailyRecordType, MemosClient0191 } from "api/memos-v0.19.1";
 import * as log from "utils/log";
-import { DailyRecordType, ResourceType } from "types/memos-v0.19.1-types";
-import { generateFileLink } from "./memos-util";
-import { MemosClient0210 } from "api/memos-v0.22.1";
+import { MemoCli } from "api/memos-v0.22.1";
 import { Memo } from "api/memos-proto-v0.22.1/gen/api/v1/memo_service";
-import { Resource } from "api/memos-proto-v0.22.1/gen/api/v1/resource_service";
 import { PluginSettings } from "types/PluginSettings";
+import {
+	APIResource,
+	convert0220ResourceToAPIResource,
+	generateResourceLink,
+} from "./MemosResource";
 
-type APIMemoParam = {
+type APIMemo = {
 	/**
 	 * created at or udpated at for the memo, for identifying the memo
 	 * for identifying the memo, sorting, and decide which daily note to place in
@@ -21,8 +23,9 @@ type APIMemoParam = {
 	 * resources for the memo
 	 * for generating file link
 	 */
-	resources?: ResourceType[];
+	resources?: APIResource[];
 };
+
 type MdItemMemo = {
 	date: string; // date for which daily memo to place
 	timestamp: string; // timestamp for identifying the memo
@@ -35,7 +38,7 @@ type MdItemMemo = {
  * It will find all resources and generate file link.
  * @param param APIMemoParam
  */
-function transformAPIToMdItemMemo(param: APIMemoParam): MdItemMemo {
+function transformAPIToMdItemMemo(param: APIMemo): MdItemMemo {
 	const { timestamp, content, resources } = param;
 	const [date, time] = window
 		.moment(timestamp * 1000)
@@ -73,8 +76,8 @@ function transformAPIToMdItemMemo(param: APIMemoParam): MdItemMemo {
 		? "\n" +
 		  resources
 				?.map(
-					(resource: ResourceType) =>
-						`\t- ${generateFileLink(resource)}`
+					(resource: APIResource) =>
+						`\t- ${generateResourceLink(resource)}`
 				)
 				.join("\n")
 		: "";
@@ -97,43 +100,7 @@ export type MemosPaginator = {
 	) => Promise<string>;
 };
 
-/**
- * MemosPaginatorFactory
- * Create MemosPaginator based on settings
- * it will create different version of MemosPaginator
- * by checking the settings.memosAPIVersion
- */
-export class MemosPaginatorFactory {
-	constructor(private settings: PluginSettings) {}
-	createMemosPaginator = (
-		lastTime?: string,
-		filter?: (
-			date: string,
-			dailyMemosForDate: Record<string, string>
-		) => boolean
-	): MemosPaginator => {
-		if (this.settings.memosAPIVersion === "v0.22.1") {
-			return new MemosPaginator0220(
-				new MemosClient0210(
-					this.settings.usememosAPI,
-					this.settings.usememosToken
-				),
-				lastTime,
-				filter
-			);
-		}
-		return new MemosPaginator0191(
-			new MemosClient0191(
-				this.settings.usememosAPI,
-				this.settings.usememosToken
-			),
-			lastTime,
-			filter
-		);
-	};
-}
-
-class MemosPaginator0191 {
+export class MemosPaginator0191 {
 	private limit: number;
 	private offset: number;
 	private lastTime: string;
@@ -234,13 +201,13 @@ class MemosPaginator0191 {
 	};
 }
 
-class MemosPaginator0220 {
+export class MemosPaginator0220 {
 	private pageSize: number;
 	private pageToken: string;
 	private lastTime: string;
 
 	constructor(
-		private client: MemosClient0210,
+		private memoCli: MemoCli,
 		lastTime?: string,
 		private filter?: (
 			date: string,
@@ -265,7 +232,7 @@ class MemosPaginator0220 {
 	) => {
 		this.pageToken = ""; // iterate from newest, reset pageToken
 		while (true) {
-			const resp = await this.client.listMemos({
+			const resp = await this.memoCli.listMemos({
 				pageSize: this.pageSize,
 				pageToken: this.pageToken,
 				filter: "",
@@ -325,12 +292,9 @@ class MemosPaginator0220 {
 				continue;
 			}
 
-			const resources = memo.resources?.map((resource) => ({
-				id: resource.uid,
-				externalLink: resource.externalLink,
-				filename: resource.filename,
-				name: resource.name,
-			}));
+			const resources = memo.resources?.map(
+				convert0220ResourceToAPIResource
+			);
 
 			const mdItemMemo = transformAPIToMdItemMemo({
 				timestamp: window.moment(memo.createTime).unix(),

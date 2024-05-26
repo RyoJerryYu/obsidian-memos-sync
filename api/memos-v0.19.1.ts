@@ -1,6 +1,31 @@
 import axios, { AxiosInstance } from "axios";
-import { DailyRecordType, FetchError, ResourceType } from "types/memos-v0.19.1-types";
 import * as log from "utils/log";
+
+export type ResourceType = {
+	name?: string;
+	externalLink?: string;
+	type?: string;
+	uid?: string;
+	id: string;
+	filename: string;
+};
+
+export type DailyRecordType = {
+	rowStatus: "ARCHIVED" | "ACTIVE" | "NORMAL";
+	updatedTs: number;
+	createdTs: number;
+	createdAt: string;
+	updatedAt: string;
+	content: string;
+	resourceList?: ResourceType[];
+};
+
+export type FetchError = {
+	code: number;
+	message: string;
+	msg?: string;
+	error?: string;
+};
 
 export class MemosClient0191 {
 	private axios: AxiosInstance;
