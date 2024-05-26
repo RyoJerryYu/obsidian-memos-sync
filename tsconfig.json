@@ -1,6 +1,5 @@
 {
 	"compilerOptions": {
-		"baseUrl": ".",
 		"inlineSourceMap": true,
 		"inlineSources": true,
 		"module": "ESNext",
@@ -13,6 +12,11 @@
 		"importHelpers": true,
 		"isolatedModules": true,
 		"strictNullChecks": true,
+		"paths": {
+			"@/*": [
+				"./src/*"
+			]
+		},
 		"lib": [
 			"DOM",
 			"ES5",
@@ -24,6 +28,6 @@
 	"include": [
 		"**/*.ts",
 		"**/*.tsx",
-		"main.tsx"
+		"main.ts"
 	]
 }

@@ -1,4 +1,4 @@
-import * as log from "utils/log";
+import * as log from "@/utils/log";
 
 /**
  * Generates a regular expression for matching a header in a daily note.

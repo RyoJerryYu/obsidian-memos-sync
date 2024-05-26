@@ -1,11 +1,11 @@
-import { PluginSettings } from "types/PluginSettings";
+import { PluginSettings } from "@/types/PluginSettings";
 import {
 	MemosPaginator,
 	MemosPaginator0191,
 	MemosPaginator0220,
 } from "./MemosPaginator";
-import { MemoCli, ResourceCli, newClients } from "api/memos-v0.22.0";
-import { MemosClient0191 } from "api/memos-v0.19.1";
+import { MemoCli, ResourceCli, newClients } from "@/api/memos-v0.22.0";
+import { MemosClient0191 } from "@/api/memos-v0.19.1";
 import {
 	MemosResourceFetcher,
 	MemosResourceFetcher0191,

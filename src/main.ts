@@ -10,8 +10,8 @@ import {
 } from "obsidian";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { DailyMemos } from "services/DailyMemos/DailyMemos";
-import { PluginSettings } from "types/PluginSettings";
+import { DailyMemos } from "@/services/DailyMemos/DailyMemos";
+import { PluginSettings } from "@/types/PluginSettings";
 
 // Remember to rename these classes and interfaces!
 
@@ -122,22 +122,22 @@ class SampleSettingTab extends PluginSettingTab {
 					});
 				});
 			});
-		
+
 		new Setting(this.containerEl)
-		.setName("Memos API Version")
-		.setDesc("Memos API Version")
-		.addDropdown((dropDown)=>{
-			dropDown.addOptions({
-				"v0.19.1": "before v0.21.x",
-				"v0.22.0": "after v0.22.x",
-			});
-			dropDown.setValue(this.plugin.settings.memosAPIVersion);
-			dropDown.onChange((value) => {
-				this.saveSettings({
-					memosAPIVersion: value as "v0.19.1" | "v0.22.0",
+			.setName("Memos API Version")
+			.setDesc("Memos API Version")
+			.addDropdown((dropDown) => {
+				dropDown.addOptions({
+					"v0.19.1": "before v0.21.x",
+					"v0.22.0": "after v0.22.x",
 				});
-			})
-		})
+				dropDown.setValue(this.plugin.settings.memosAPIVersion);
+				dropDown.onChange((value) => {
+					this.saveSettings({
+						memosAPIVersion: value as "v0.19.1" | "v0.22.0",
+					});
+				});
+			});
 
 		new Setting(this.containerEl)
 			.setName("Usememos API URL")

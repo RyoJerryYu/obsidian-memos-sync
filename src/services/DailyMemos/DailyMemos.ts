@@ -6,8 +6,8 @@ import {
 } from "obsidian-daily-notes-interface";
 import type { Moment } from "moment";
 import { App, MarkdownView, TFile, normalizePath } from "obsidian";
-import { PluginSettings } from "types/PluginSettings";
-import * as log from "utils/log";
+import { PluginSettings } from "@/types/PluginSettings";
+import * as log from "@/utils/log";
 import { MemosPaginator } from "./MemosPaginator";
 import { DailyNoteModifier } from "./DailyNoteModifier";
 import { MemosResourceFetcher } from "./MemosResourceFetcher";
