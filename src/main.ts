@@ -56,17 +56,17 @@ export default class MemosSyncPlugin extends Plugin {
 	loadDailyMemos = async () => {
 		this.dailyMemos = new DailyMemos(this.app, this.settings);
 		this.addCommand({
-			id: "obsidian-memos-sync-daily-memos",
+			id: "memos-sync-daily-memos",
 			name: "Sync daily memos",
 			callback: this.dailyMemos.sync,
 		});
 		this.addCommand({
-			id: "obsidian-memos-force-sync-daily-memos",
+			id: "memos-force-sync-daily-memos",
 			name: "Force sync daily memos",
 			callback: this.dailyMemos.forceSync,
 		});
 		this.addCommand({
-			id: "obsidian-memos-sync-force-current-daily-memos",
+			id: "memos-sync-force-current-daily-memos",
 			name: "Force sync current daily memos",
 			callback: this.dailyMemos.syncForCurrentFile,
 		});
