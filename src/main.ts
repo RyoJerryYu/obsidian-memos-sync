@@ -13,12 +13,12 @@ import {
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { DailyMemos } from "@/services/DailyMemos/DailyMemos";
-import { PluginSettings } from "@/types/PluginSettings";
+import { MemosSyncPluginSettings } from "@/types/PluginSettings";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 
 // Remember to rename these classes and interfaces!
 
-const DEFAULT_SETTINGS: PluginSettings = {
+const MEMOS_SYNC_DEFAULT_SETTINGS: MemosSyncPluginSettings = {
 	dailyMemosHeader: "Memos",
 	memosAPIVersion: "v0.19.1",
 	memosAPIURL: "https://usememos.com",
@@ -26,8 +26,8 @@ const DEFAULT_SETTINGS: PluginSettings = {
 	attachmentFolder: "Attachments",
 };
 
-export default class MyPlugin extends Plugin {
-	settings: PluginSettings;
+export default class MemosSyncPlugin extends Plugin {
+	settings: MemosSyncPluginSettings;
 	dailyMemos: DailyMemos;
 
 	async onload() {
@@ -35,7 +35,7 @@ export default class MyPlugin extends Plugin {
 		await this.loadDailyMemos();
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new MemosSyncSettingTab(this.app, this));
 	}
 
 	onunload() {}
@@ -43,7 +43,7 @@ export default class MyPlugin extends Plugin {
 	loadSettings = async () => {
 		this.settings = Object.assign(
 			{},
-			DEFAULT_SETTINGS,
+			MEMOS_SYNC_DEFAULT_SETTINGS,
 			await this.loadData()
 		);
 	};
@@ -56,17 +56,17 @@ export default class MyPlugin extends Plugin {
 	loadDailyMemos = async () => {
 		this.dailyMemos = new DailyMemos(this.app, this.settings);
 		this.addCommand({
-			id: "my-plugin-sync-daily-memos",
+			id: "obsidian-memos-sync-daily-memos",
 			name: "Sync daily memos",
 			callback: this.dailyMemos.sync,
 		});
 		this.addCommand({
-			id: "my-plugin-force-sync-daily-memos",
+			id: "obsidian-memos-force-sync-daily-memos",
 			name: "Force sync daily memos",
 			callback: this.dailyMemos.forceSync,
 		});
 		this.addCommand({
-			id: "my-plugin-force-sync-current-daily-memos",
+			id: "obsidian-memos-sync-force-current-daily-memos",
 			name: "Force sync current daily memos",
 			callback: this.dailyMemos.syncForCurrentFile,
 		});
@@ -77,16 +77,16 @@ export default class MyPlugin extends Plugin {
 	};
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class MemosSyncSettingTab extends PluginSettingTab {
 	app: App;
-	plugin: MyPlugin;
+	plugin: MemosSyncPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: MemosSyncPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
-	private saveSettings = (newSettings: Partial<PluginSettings>) => {
+	private saveSettings = (newSettings: Partial<MemosSyncPluginSettings>) => {
 		this.plugin.settings = {
 			...this.plugin.settings,
 			...newSettings,
@@ -119,7 +119,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setName("Daily Memos Header")
 			.setDesc("The header for the daily memos section.")
 			.addText((textfield) => {
-				textfield.setPlaceholder(DEFAULT_SETTINGS.dailyMemosHeader);
+				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.dailyMemosHeader);
 				textfield.setValue(this.plugin.settings.dailyMemosHeader);
 				textfield.onChange((value) => {
 					this.saveSettings({
@@ -132,7 +132,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setName("Attachment Folder")
 			.setDesc("The folder for attachments.")
 			.addText((textfield) => {
-				textfield.setPlaceholder(DEFAULT_SETTINGS.attachmentFolder);
+				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.attachmentFolder);
 				textfield.setValue(this.plugin.settings.attachmentFolder);
 				textfield.onChange((value) => {
 					this.saveSettings({
@@ -161,7 +161,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setName("Memos API URL")
 			.setDesc("Memos API URL, e.g. http://localhost:5230")
 			.addText((textfield) => {
-				textfield.setPlaceholder(DEFAULT_SETTINGS.memosAPIURL);
+				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.memosAPIURL);
 				textfield.setValue(this.plugin.settings.memosAPIURL);
 				textfield.onChange((value) => {
 					this.saveSettings({
@@ -174,7 +174,7 @@ class SampleSettingTab extends PluginSettingTab {
 			.setName("Memos API Token")
 			.setDesc("Memos API token.")
 			.addText((textfield) => {
-				textfield.setPlaceholder(DEFAULT_SETTINGS.memosAPIToken);
+				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.memosAPIToken);
 				textfield.setValue(this.plugin.settings.memosAPIToken);
 				textfield.onChange((value) => {
 					this.saveSettings({

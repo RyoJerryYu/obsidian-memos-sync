@@ -1,4 +1,4 @@
-import { PluginSettings } from "@/types/PluginSettings";
+import { MemosSyncPluginSettings } from "@/types/PluginSettings";
 import {
 	MemosPaginator,
 	MemosPaginator0191,
@@ -21,7 +21,7 @@ import {
 export class MemosAbstractFactory {
 	private inner: MemosFactory;
 
-	constructor(private settings: PluginSettings) {
+	constructor(private settings: MemosSyncPluginSettings) {
 		if (this.settings.memosAPIVersion === "v0.22.0") {
 			const { memoCli, resourceCli } = newClients(
 				this.settings.memosAPIURL,
@@ -63,7 +63,7 @@ type MemosFactory = {
 
 class MemosFactory0191 {
 	private client: MemosClient0191;
-	constructor(private settings: PluginSettings) {
+	constructor(private settings: MemosSyncPluginSettings) {
 		this.client = new MemosClient0191(
 			this.settings.memosAPIURL,
 			this.settings.memosAPIToken
@@ -88,7 +88,7 @@ class MemosFactory0191 {
 class MemosFactory0220 {
 	private memoCli: MemoCli;
 	private resourceCli: ResourceCli;
-	constructor(private settings: PluginSettings) {
+	constructor(private settings: MemosSyncPluginSettings) {
 		const { memoCli, resourceCli } = newClients(
 			this.settings.memosAPIURL,
 			this.settings.memosAPIToken
