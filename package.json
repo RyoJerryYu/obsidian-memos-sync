@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-memos-sync",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "Syncing Memos to Obsidian daily note.",
 	"main": "main.js",
 	"scripts": {
