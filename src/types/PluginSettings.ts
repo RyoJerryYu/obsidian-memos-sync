@@ -1,4 +1,4 @@
-export interface PluginSettings {
+export interface MemosSyncPluginSettings {
 	/**
 	 * The header for the daily memos section.
 	 */

@@ -6,7 +6,7 @@ import {
 } from "obsidian-daily-notes-interface";
 import type { Moment } from "moment";
 import { App, MarkdownView, TFile, normalizePath } from "obsidian";
-import { PluginSettings } from "@/types/PluginSettings";
+import { MemosSyncPluginSettings } from "@/types/PluginSettings";
 import * as log from "@/utils/log";
 import { MemosPaginator } from "./MemosPaginator";
 import { DailyNoteModifier } from "./DailyNoteModifier";
@@ -39,13 +39,13 @@ class DailyNoteManager {
 
 export class DailyMemos {
 	private app: App;
-	private settings: PluginSettings;
+	private settings: MemosSyncPluginSettings;
 	private localKey: string;
 	private memosFactory: MemosAbstractFactory;
 	private memosPaginator: MemosPaginator;
 	private memosResourceFetcher: MemosResourceFetcher;
 
-	constructor(app: App, settings: PluginSettings) {
+	constructor(app: App, settings: MemosSyncPluginSettings) {
 		if (!settings.memosAPIURL) {
 			log.error(
 				"Please set the usememosAPI setting in the plugin settings."
