@@ -2,10 +2,9 @@
 	"id": "memos-sync",
 	"name": "Memos Sync",
 	"version": "0.3.3",
-	"minAppVersion": "0.15.0",
-	"description": "Syncing memos from a [Memos](https://github.com/usememos/memos) server to Obsidian daily note. Fully compatible with official Daily Notes plugin, Calendar plugin and Periodic Notes plugin.",
+	"minAppVersion": "1.5.12",
+	"description": "Syncing memos from a [Memos](https://github.com/usememos/memos) server to your daily note. Fully compatible with official Daily Notes plugin, Calendar plugin and Periodic Notes plugin.",
 	"author": "RyoJerryYu",
 	"authorUrl": "https://github.com/RyoJerryYu",
-	"isDesktopOnly": true,
-	"js": "main.js"
+	"isDesktopOnly": true
 }
