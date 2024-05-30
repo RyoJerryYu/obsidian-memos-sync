@@ -1,6 +1,6 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { AxiosRequestConfig } from "axios";
 import * as log from "@/utils/log";
-import { requestUrl } from "obsidian";
+import { RequestUrlResponse, requestUrl } from "obsidian";
 
 export type ResourceType = {
 	name?: string;
@@ -39,7 +39,7 @@ export class MemosClient0191 {
 		offset: number,
 	): Promise<DailyRecordType[] | undefined> => {
 		try {
-			const data = await this.get<DailyRecordType[] | FetchError>(
+			const data = await this.getJSON<DailyRecordType[] | FetchError>(
 				this.endpoint + `/api/v1/memo`,
 				{
 					params: {
@@ -63,7 +63,7 @@ export class MemosClient0191 {
 	};
 
 	listResources = async () => {
-		const data = await this.get<ResourceType[] | FetchError>(
+		const data = await this.getJSON<ResourceType[] | FetchError>(
 			this.endpoint + `/api/v1/resource`,
 		);
 		return data;
@@ -84,24 +84,11 @@ export class MemosClient0191 {
 		return data;
 	};
 
-	private get = async <T = any, D = any>(
+	private getJSON = async <T = any, D = any>(
 		url: string,
 		config?: AxiosRequestConfig<D>,
 	): Promise<T> => {
-		const urlObj = new URL(url);
-		if (config?.params) {
-			Object.entries(config.params).forEach(([key, value]) => {
-				urlObj.searchParams.append(key, String(value));
-			});
-		}
-		const res = await requestUrl({
-			url: urlObj.toString(),
-			headers: {
-				Authorization: `Bearer ${this.token}`,
-				Accept: "application/json",
-			},
-		});
-
+		const res = await this.get(url, config);
 		return res.json;
 	};
 
@@ -109,6 +96,14 @@ export class MemosClient0191 {
 		url: string,
 		config?: AxiosRequestConfig<D>,
 	): Promise<ArrayBuffer> => {
+		const res = await this.get(url, config);
+		return res.arrayBuffer;
+	};
+
+	private get = async <D = any>(
+		url: string,
+		config?: AxiosRequestConfig<D>,
+	): Promise<RequestUrlResponse> => {
 		const urlObj = new URL(url);
 		if (config?.params) {
 			Object.entries(config.params).forEach(([key, value]) => {
@@ -122,7 +117,6 @@ export class MemosClient0191 {
 				Accept: "application/json",
 			},
 		});
-
-		return res.arrayBuffer;
+		return res;
 	};
 }
