@@ -1,24 +1,18 @@
-import { Component, MarkdownRenderer, Notice, TFile, moment } from "obsidian";
-
+import { Notice } from "obsidian";
 
 /**
  * Build environment, defined in esbuild.config.mjs
  */
-const env: "production" | "development" = process.env.BUILD_ENV as any || "production";
+type EnvType = "production" | "development";
+const env: EnvType = (process.env.BUILD_ENV as EnvType) || "production";
 
-export enum LogLevel {
-	"debug",
-	"info",
-	"warn",
-	"error",  
-}
-export function debug(msg:string) {
+export function debug(msg: string) {
 	if (env === "production") return;
 	console.debug(msg);
 }
 export function info(msg: string) {
 	new Notice(msg, 5000);
-	console.info(msg); 
+	console.info(msg);
 }
 
 export function warn(msg: string) {

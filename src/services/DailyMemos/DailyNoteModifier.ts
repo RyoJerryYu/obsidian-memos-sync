@@ -35,10 +35,10 @@ export class DailyNoteModifier {
 	 *
 	 * @returns modifiedFileContent
 	 */
-	modifyDailyNote = async (
+	modifyDailyNote = (
 		originFileContent: string,
 		today: string,
-		fetchedRecordList: Record<string, string>
+		fetchedRecordList: Record<string, string>,
 	) => {
 		const header = this.dailyMemosHeader;
 		const reg = generateHeaderRegExp(header);
@@ -47,7 +47,7 @@ export class DailyNoteModifier {
 		if (!regMatch?.length || regMatch.index === undefined) {
 			log.debug(`${regMatch}`);
 			log.warn(
-				`Failed to find header for ${today}. Please make sure your daily note template is correct.`
+				`Failed to find header for ${today}. Please make sure your daily note template is correct.`,
 			);
 			return;
 		}
@@ -82,7 +82,7 @@ export class DailyNoteModifier {
 				suffix,
 				localRecordList,
 				existedRecordList,
-			})}`
+			})}`,
 		);
 
 		const sortedRecordList = Object.entries({

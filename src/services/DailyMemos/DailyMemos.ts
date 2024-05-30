@@ -48,7 +48,7 @@ export class DailyMemos {
 	constructor(app: App, settings: MemosSyncPluginSettings) {
 		if (!settings.memosAPIURL) {
 			log.error(
-				"Please set the usememosAPI setting in the plugin settings."
+				"Please set the usememosAPI setting in the plugin settings.",
 			);
 			return;
 		}
@@ -111,7 +111,7 @@ export class DailyMemos {
 		const currentMomentMmemosPaginator =
 			this.memosFactory.createMemosPaginator(
 				"",
-				(date) => date === currentDate
+				(date) => date === currentDate,
 			);
 
 		this.downloadResource();
@@ -131,9 +131,7 @@ export class DailyMemos {
 		}
 
 		const folder = this.settings.attachmentFolder;
-		//TODO Create Folder...
-		// will cause error, make it more robust
-		if (!this.app.vault.getAbstractFileByPath(folder)) {
+		if (!this.app.vault.getFolderByPath(folder)) {
 			log.info(`Creating folder: ${folder}`);
 			await this.app.vault.createFolder(folder);
 		}
@@ -142,27 +140,27 @@ export class DailyMemos {
 				if (resource.externalLink) {
 					// do not download external resources
 					log.debug(
-						`External resource, skip download: ${resource.externalLink}`
+						`External resource, skip download: ${resource.externalLink}`,
 					);
 					return;
 				}
 
 				const resourcePath = normalizePath(
-					`${folder}/${generateResourceName(resource)}`
+					`${folder}/${generateResourceName(resource)}`,
 				);
 
 				const isResourceExists = await this.app.vault.adapter.exists(
-					resourcePath
+					resourcePath,
 				);
 				if (isResourceExists) {
 					log.debug(
-						`Resource exists, skip download: ${resourcePath}`
+						`Resource exists, skip download: ${resourcePath}`,
 					);
 					return;
 				}
 
 				const data = await this.memosResourceFetcher.fetchResource(
-					resource
+					resource,
 				);
 
 				if (!data) {
@@ -172,39 +170,39 @@ export class DailyMemos {
 
 				log.debug(`Download resource: ${resourcePath}`);
 				await this.app.vault.adapter.writeBinary(resourcePath, data);
-			})
+			}),
 		);
 	};
 
 	private insertDailyMemos = async (memosPaginator: MemosPaginator) => {
 		const dailyNoteManager = new DailyNoteManager();
 		const dailyNoteModifier = new DailyNoteModifier(
-			this.settings.dailyMemosHeader
+			this.settings.dailyMemosHeader,
 		);
 		const lastTime = await memosPaginator.foreach(
 			async ([today, dailyMemosForToday]) => {
 				const momentDay = window.moment(today);
 
 				const targetFile = await dailyNoteManager.getOrCreateDailyNote(
-					momentDay
+					momentDay,
 				);
 
 				// read daily note, modify the memos list
+				this.app.vault.process(targetFile, (originFileContent) => {
+					const modifiedFileContent =
+						dailyNoteModifier.modifyDailyNote(
+							originFileContent,
+							today,
+							dailyMemosForToday,
+						);
 
-				const originFileContent = await this.app.vault.read(targetFile);
+					if (!modifiedFileContent) {
+						return originFileContent;
+					}
 
-				const modifiedFileContent =
-					await dailyNoteModifier.modifyDailyNote(
-						originFileContent,
-						today,
-						dailyMemosForToday
-					);
-				if (!modifiedFileContent) {
-					return;
-				}
-
-				await this.app.vault.modify(targetFile, modifiedFileContent);
-			}
+					return modifiedFileContent;
+				});
+			},
 		);
 
 		log.info(`Synced daily memos, lastTime: ${lastTime}`);

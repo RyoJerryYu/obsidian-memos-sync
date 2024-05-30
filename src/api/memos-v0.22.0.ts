@@ -16,7 +16,7 @@ export function newClients(endpoint: string, token: string) {
 		endpoint,
 		FetchTransport({
 			credentials: "include",
-		})
+		}),
 	);
 	const clientFactory = createClientFactory().use(
 		(call, options) =>
@@ -24,19 +24,19 @@ export function newClients(endpoint: string, token: string) {
 				...options,
 				metadata: Metadata(options.metadata).set(
 					"authorization",
-					`Bearer ${token}`
+					`Bearer ${token}`,
 				),
-			})!
+			})!,
 	);
 
 	return {
 		memoCli: clientFactory.create(
 			MemoServiceDefinition,
-			channel
+			channel,
 		) as MemoCli,
 		resourceCli: clientFactory.create(
 			ResourceServiceDefinition,
-			channel
+			channel,
 		) as ResourceCli,
 	};
 }

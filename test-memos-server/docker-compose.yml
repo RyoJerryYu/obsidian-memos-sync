@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+    memos_0191:
+        # used for end to end test
+        image: neosmemo/memos:0.19.1
+        container_name: memos_0191
+        ports:
+            - 5231:5230
+    memos_0220:
+        # used for end to end test
+        image: neosmemo/memos:0.22.0
+        container_name: memos_0220
+        ports:
+            - 5232:5230

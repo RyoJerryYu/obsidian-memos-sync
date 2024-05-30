@@ -1,5 +1,6 @@
-import axios, { AxiosInstance } from "axios";
+import { AxiosRequestConfig } from "axios";
 import * as log from "@/utils/log";
+import { RequestUrlResponse, requestUrl } from "obsidian";
 
 export type ResourceType = {
 	name?: string;
@@ -28,41 +29,33 @@ export type FetchError = {
 };
 
 export class MemosClient0191 {
-	private axios: AxiosInstance;
-
 	constructor(
 		private endpoint: string, // http://localhost:5230
-		private token: string
-	) {
-		this.axios = axios.create({
-			headers: {
-				Authorization: `Bearer ${token}`,
-				Accept: "application/json",
-			},
-		});
-	}
+		private token: string,
+	) {}
 
 	listMemos = async (
 		limit: number,
-		offset: number
+		offset: number,
 	): Promise<DailyRecordType[] | undefined> => {
 		try {
-			const { data } = await this.axios.get<
-				DailyRecordType[] | FetchError
-			>(this.endpoint + `/api/v1/memo`, {
-				params: {
-					limit: limit,
-					offset: offset,
-					rowStatus: "NORMAL",
+			const data = await this.getJSON<DailyRecordType[] | FetchError>(
+				this.endpoint + `/api/v1/memo`,
+				{
+					params: {
+						limit: limit,
+						offset: offset,
+						rowStatus: "NORMAL",
+					},
 				},
-			});
+			);
 
 			if (Array.isArray(data)) {
 				return data;
 			}
 
 			throw new Error(
-				data.message || data.msg || data.error || JSON.stringify(data)
+				data.message || data.msg || data.error || JSON.stringify(data),
 			);
 		} catch (error) {
 			log.error(`Failed to fetch daily memos: ${error}`);
@@ -70,8 +63,8 @@ export class MemosClient0191 {
 	};
 
 	listResources = async () => {
-		const { data } = await this.axios.get<ResourceType[] | FetchError>(
-			this.endpoint + `/api/v1/resource`
+		const data = await this.getJSON<ResourceType[] | FetchError>(
+			this.endpoint + `/api/v1/resource`,
 		);
 		return data;
 	};
@@ -84,10 +77,46 @@ export class MemosClient0191 {
 		const resourceURL = `${this.endpoint}/o/r/${
 			resource.uid || resource.name || resource.id
 		}`;
-		const { data } = await this.axios.get(resourceURL, {
+		const data = await this.getRaw(resourceURL, {
 			responseType: "arraybuffer",
 		});
 
 		return data;
+	};
+
+	private getJSON = async <T = any, D = any>(
+		url: string,
+		config?: AxiosRequestConfig<D>,
+	): Promise<T> => {
+		const res = await this.get(url, config);
+		return res.json;
+	};
+
+	private getRaw = async <D = any>(
+		url: string,
+		config?: AxiosRequestConfig<D>,
+	): Promise<ArrayBuffer> => {
+		const res = await this.get(url, config);
+		return res.arrayBuffer;
+	};
+
+	private get = async <D = any>(
+		url: string,
+		config?: AxiosRequestConfig<D>,
+	): Promise<RequestUrlResponse> => {
+		const urlObj = new URL(url);
+		if (config?.params) {
+			Object.entries(config.params).forEach(([key, value]) => {
+				urlObj.searchParams.append(key, String(value));
+			});
+		}
+		const res = await requestUrl({
+			url: urlObj.toString(),
+			headers: {
+				Authorization: `Bearer ${this.token}`,
+				Accept: "application/json",
+			},
+		});
+		return res;
 	};
 }

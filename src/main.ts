@@ -1,17 +1,4 @@
-import {
-	App,
-	Editor,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-	SliderComponent,
-	setTooltip,
-} from "obsidian";
-import * as React from "react";
-import { createRoot } from "react-dom/client";
+import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { DailyMemos } from "@/services/DailyMemos/DailyMemos";
 import { MemosSyncPluginSettings } from "@/types/PluginSettings";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
@@ -44,7 +31,7 @@ export default class MemosSyncPlugin extends Plugin {
 		this.settings = Object.assign(
 			{},
 			MEMOS_SYNC_DEFAULT_SETTINGS,
-			await this.loadData()
+			await this.loadData(),
 		);
 	};
 
@@ -102,24 +89,29 @@ class MemosSyncSettingTab extends PluginSettingTab {
 				text: "Attention: Daily Notes is not enabled.",
 				attr: {
 					style: "color: red",
-				}
+				},
 			});
 			this.containerEl.createEl("p", {
-				text: "Daily Notes feature is not enabled. Please enable the official Daily Notes plugin or daily notes feature in Periodic Notes plugin. Otherwise, this plugin will not work properly.",
+				text: "Daily Notes feature is not enabled.",
 				attr: {
 					style: "color: red",
-				}
-			})
-			
+				},
+			});
+			this.containerEl.createEl("p", {
+				text: "Please enable the official Daily Notes plugin or daily notes feature in Periodic Notes plugin. Otherwise, this plugin will not work properly.",
+				attr: {
+					style: "color: red",
+				},
+			});
 		}
 
-		this.containerEl.createEl("h3", { text: "Settings for Memos Sync" });
-
 		new Setting(this.containerEl)
-			.setName("Daily Memos Header")
+			.setName("Daily memos header")
 			.setDesc("The header for the daily memos section.")
 			.addText((textfield) => {
-				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.dailyMemosHeader);
+				textfield.setPlaceholder(
+					MEMOS_SYNC_DEFAULT_SETTINGS.dailyMemosHeader,
+				);
 				textfield.setValue(this.plugin.settings.dailyMemosHeader);
 				textfield.onChange((value) => {
 					this.saveSettings({
@@ -129,10 +121,12 @@ class MemosSyncSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(this.containerEl)
-			.setName("Attachment Folder")
+			.setName("Attachment folder")
 			.setDesc("The folder for attachments.")
 			.addText((textfield) => {
-				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.attachmentFolder);
+				textfield.setPlaceholder(
+					MEMOS_SYNC_DEFAULT_SETTINGS.attachmentFolder,
+				);
 				textfield.setValue(this.plugin.settings.attachmentFolder);
 				textfield.onChange((value) => {
 					this.saveSettings({
@@ -141,9 +135,11 @@ class MemosSyncSettingTab extends PluginSettingTab {
 				});
 			});
 
+		new Setting(this.containerEl).setName("Memos API").setHeading();
+
 		new Setting(this.containerEl)
-			.setName("Memos API Version")
-			.setDesc("Memos API Version")
+			.setName("Memos API version")
+			.setDesc("Which version your Memos server.")
 			.addDropdown((dropDown) => {
 				dropDown.addOptions({
 					"v0.19.1": "before v0.21.x",
@@ -161,7 +157,9 @@ class MemosSyncSettingTab extends PluginSettingTab {
 			.setName("Memos API URL")
 			.setDesc("Memos API URL, e.g. http://localhost:5230")
 			.addText((textfield) => {
-				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.memosAPIURL);
+				textfield.setPlaceholder(
+					MEMOS_SYNC_DEFAULT_SETTINGS.memosAPIURL,
+				);
 				textfield.setValue(this.plugin.settings.memosAPIURL);
 				textfield.onChange((value) => {
 					this.saveSettings({
@@ -171,10 +169,12 @@ class MemosSyncSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(this.containerEl)
-			.setName("Memos API Token")
+			.setName("Memos API token")
 			.setDesc("Memos API token.")
 			.addText((textfield) => {
-				textfield.setPlaceholder(MEMOS_SYNC_DEFAULT_SETTINGS.memosAPIToken);
+				textfield.setPlaceholder(
+					MEMOS_SYNC_DEFAULT_SETTINGS.memosAPIToken,
+				);
 				textfield.setValue(this.plugin.settings.memosAPIToken);
 				textfield.onChange((value) => {
 					this.saveSettings({
