@@ -38,3 +38,6 @@ Useful when you want to sync memos for a specific day.
 | Memos API URL      | The URL of the Memos API.                                                             | `http://localhost:5230`           |
 | Memos API Token    | The token for the Memos API. You can create one on Memos UI -> Settings -> My Account |                                   |
 
+# Special thanks
+
+The code in [obsidian-lifeos](https://github.com/quanru/obsidian-lifeos) provides a lot of reference value in the early stages of this project. Thanks very much!
