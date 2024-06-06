@@ -38,4 +38,6 @@
 | Memos API URL      | Memos API的URL。                                                          | `http://localhost:5230`           |
 | Memos API Token    | Memos API的令牌。你可以在 Memos 页面 -> 设置 -> 我的账户 界面上创建一个。 |                                   |
 
+# 特别鸣谢
 
+[obsidian-lifeos](https://github.com/quanru/obsidian-lifeos)中的代码有很多有价值的参考，为这个项目早期阶段的快速开发提供了宝贵的帮助。非常感谢！

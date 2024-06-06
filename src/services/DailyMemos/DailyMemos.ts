@@ -58,7 +58,7 @@ export class DailyMemos {
 
 		this.memosFactory = new MemosAbstractFactory(this.settings);
 
-		this.localKey = `periodic-para-daily-record-last-time-${this.settings.memosAPIToken}`;
+		this.localKey = `obsidian-memos-sync-last-time-${this.settings.memosAPIToken}`;
 		const lastTime = window.localStorage.getItem(this.localKey) || "";
 		this.memosPaginator = this.memosFactory.createMemosPaginator(lastTime);
 		this.memosResourceFetcher = this.memosFactory.createResourceFetcher();
