@@ -123,9 +123,9 @@ export class DailyMemos {
 	 */
 	private downloadResource = async (): Promise<void> => {
 		const { origin } = new URL(this.settings.memosAPIURL);
-		const data = await this.memosResourceFetcher.listResources();
+		const resourceList = await this.memosResourceFetcher.listResources();
 
-		if (!data) {
+		if (!resourceList) {
 			log.debug(`No resources found: ${origin}/resource`);
 			return;
 		}
@@ -136,7 +136,7 @@ export class DailyMemos {
 			await this.app.vault.createFolder(folder);
 		}
 		await Promise.all(
-			data.map(async (resource) => {
+			resourceList.map(async (resource) => {
 				if (resource.externalLink) {
 					// do not download external resources
 					log.debug(
@@ -188,7 +188,7 @@ export class DailyMemos {
 				);
 
 				// read daily note, modify the memos list
-				this.app.vault.process(targetFile, (originFileContent) => {
+				await this.app.vault.process(targetFile, (originFileContent) => {
 					const modifiedFileContent =
 						dailyNoteModifier.modifyDailyNote(
 							originFileContent,
