@@ -236,6 +236,7 @@ export class MemosPaginator0220 {
 				pageToken: this.pageToken,
 				filter: "",
 			});
+			log.debug(`resp for pageToken ${this.pageToken}: ${JSON.stringify(resp)}`)
 			if (!resp) {
 				log.debug("No new daily memos found.");
 				this.lastTime = Date.now().toString();
@@ -275,9 +276,9 @@ export class MemosPaginator0220 {
 			);
 
 			this.lastTime = String(mostRecentRecordTimeStamp * 1000);
-			// if (!nextPageToken) {
-			// 	return this.lastTime;
-			// }
+			if (!nextPageToken) {
+				return this.lastTime;
+			}
 			this.pageToken = nextPageToken;
 		}
 	};
