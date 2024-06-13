@@ -86,8 +86,8 @@ export class DailyNoteModifier {
 		);
 
 		const sortedRecordList = Object.entries({
-			...fetchedRecordList,
 			...existedRecordList,
+			...fetchedRecordList,
 		})
 			.sort((a, b) => Number(a[0]) - Number(b[0]))
 			.map((item) => item[1])
