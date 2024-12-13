@@ -1,9 +1,12 @@
-version: v1
+version: v2
 managed:
   enabled: true
+  disable:
+    - file_option: go_package
+      module: buf.build/googleapis/googleapis
 plugins:
   # Build the TypeScript definitions for the web.
-  - plugin: buf.build/community/stephenh-ts-proto
+  - remote: buf.build/community/stephenh-ts-proto
     out: gen
     # reference: https://github.com/deeplay-io/nice-grpc/blob/master/packages/nice-grpc-web/README.md#using-ts-proto
     opt:
@@ -14,3 +17,16 @@ plugins:
       - useExactTypes=false
       - esModuleInterop=true
       - stringEnums=true
+
+  - remote: buf.build/bufbuild/es
+    out: gen_es
+    include_imports: true # bufbuild/es plugin do not generate import by default
+    opt:
+      - target=ts
+      - json_types=true
+  - local: protoc-gen-grpc-gateway-ts
+    out: gen_gateway
+    include_imports: true
+    include_wkt: true
+    opt:
+      - ts_import_roots=src/api/memos-proto-v0.22.0

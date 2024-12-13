@@ -73,10 +73,6 @@ message Resource {
   string type = 7;
 
   int64 size = 8;
-
-  // The related memo.
-  // Format: memos/{id}
-  optional string memo = 9;
 }
 
 message CreateResourceRequest {

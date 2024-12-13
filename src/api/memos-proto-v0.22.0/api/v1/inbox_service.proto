@@ -54,8 +54,6 @@ message Inbox {
     VERSION_UPDATE = 2;
   }
   Type type = 6;
-
-  optional int32 activity_id = 7;
 }
 
 message ListInboxesRequest {
