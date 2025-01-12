@@ -23,11 +23,6 @@ export class MemosAbstractFactory {
 
 	constructor(private settings: MemosSyncPluginSettings) {
 		if (this.settings.memosAPIVersion === "v0.22.0") {
-			const { memoCli, resourceCli } = newClients(
-				this.settings.memosAPIURL,
-				this.settings.memosAPIToken
-			);
-
 			this.inner = new MemosFactory0220(this.settings);
 			return;
 		}
@@ -64,8 +59,9 @@ type MemosFactory = {
 class MemosFactory0191 {
 	private client: MemosClient0191;
 	constructor(private settings: MemosSyncPluginSettings) {
+		const apiUrl = this.settings.memosAPIURL.endsWith("/") ? this.settings.memosAPIURL.slice(0, -1) : this.settings.memosAPIURL;
 		this.client = new MemosClient0191(
-			this.settings.memosAPIURL,
+			apiUrl,
 			this.settings.memosAPIToken
 		);
 	}
@@ -90,8 +86,9 @@ class MemosFactory0220 {
 	private resourceCli: ResourceCli;
 	private authCli: AuthCli;
 	constructor(private settings: MemosSyncPluginSettings) {
+		const apiUrl = this.settings.memosAPIURL.endsWith("/") ? this.settings.memosAPIURL.slice(0, -1) : this.settings.memosAPIURL;
 		const { memoCli, resourceCli, authCli } = newClients(
-			this.settings.memosAPIURL,
+			apiUrl,
 			this.settings.memosAPIToken
 		);
 
