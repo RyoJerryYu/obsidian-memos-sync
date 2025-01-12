@@ -4,7 +4,7 @@ import {
 	MemosPaginator0191,
 	MemosPaginator0220,
 } from "./MemosPaginator";
-import { MemoCli, ResourceCli, newClients } from "@/api/memos-v0.22.0";
+import { AuthCli, MemoCli, ResourceCli, newClients } from "@/api/memos-v0.22.0";
 import { MemosClient0191 } from "@/api/memos-v0.19.1";
 import {
 	MemosResourceFetcher,
@@ -88,14 +88,17 @@ class MemosFactory0191 {
 class MemosFactory0220 {
 	private memoCli: MemoCli;
 	private resourceCli: ResourceCli;
+	private authCli: AuthCli;
 	constructor(private settings: MemosSyncPluginSettings) {
-		const { memoCli, resourceCli } = newClients(
+		const { memoCli, resourceCli, authCli } = newClients(
 			this.settings.memosAPIURL,
 			this.settings.memosAPIToken
 		);
 
 		this.memoCli = memoCli;
 		this.resourceCli = resourceCli;
+		this.authCli = authCli;
+
 	}
 
 	createMemosPaginator = (
@@ -105,7 +108,7 @@ class MemosFactory0220 {
 			dailyMemosForDate: Record<string, string>
 		) => boolean
 	): MemosPaginator => {
-		return new MemosPaginator0220(this.memoCli, lastTime, filter);
+		return new MemosPaginator0220(this.memoCli, this.authCli, lastTime, filter);
 	};
 
 	createResourceFetcher = () => {
