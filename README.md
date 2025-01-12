@@ -38,6 +38,18 @@ Useful when you want to sync memos for a specific day.
 | Memos API URL      | The URL of the Memos API.                                                             | `http://localhost:5230`           |
 | Memos API Token    | The token for the Memos API. You can create one on Memos UI -> Settings -> My Account |                                   |
 
+# FAQ
+
+## Failed to find header for xxxx , Please make sure your daily note tempalte is correct.
+
+This plugin will create a new daily note if it does not exist. 
+And it will insert the memos under the header you specified in the configuration.
+
+One possible reason for this error is that the daily note template does not contain the header you specified in the configuration.
+So this plugin cannot find the header to insert the memos after creating the daily note.
+
+To fix this, you should make sure the daily note template contains the header you specified in the configuration.
+
 # Special thanks
 
 The code in [obsidian-lifeos](https://github.com/quanru/obsidian-lifeos) provides a lot of reference value in the early stages of this project. Thanks very much!
