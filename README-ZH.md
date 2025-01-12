@@ -38,6 +38,19 @@
 | Memos API URL      | Memos API的URL。                                                          | `http://localhost:5230`           |
 | Memos API Token    | Memos API的令牌。你可以在 Memos 页面 -> 设置 -> 我的账户 界面上创建一个。 |                                   |
 
+# FAQ
+
+## Failed to find header for xxxx , Please make sure your daily note tempalte is correct.
+
+如果每日笔记不存在，这个插件将创建一个新的每日笔记。
+并且它会在你配置中指定的标题下插入 memos 。
+
+这个错误的一个可能原因是 Daily Note 的模板中不包含你在配置中指定的标题。
+因此，这个插件在创建 Daily Note 后无法找到标题来插入 memos 。
+
+要解决这个问题，你应该确保 Daily Note 的 Template 里包含你在配置中指定的 Header 。
+请自行检查在官方 Tempalate 插件或 [Templater 插件](https://github.com/SilentVoid13/Templater) 中指定的 Daily Note 中的模板。
+
 # 特别鸣谢
 
 [obsidian-lifeos](https://github.com/quanru/obsidian-lifeos)中的代码有很多有价值的参考，为这个项目早期阶段的快速开发提供了宝贵的帮助。非常感谢！
