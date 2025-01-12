@@ -15,12 +15,13 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "20.x"
+		  cache: yarn
 
       - name: Build plugin
         run: |
-          npm install
-          npm run build
+          yarn install
+          yarn run build
 
       - name: Create release
         env:
