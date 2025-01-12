@@ -1,6 +1,6 @@
 import { DailyRecordType, MemosClient0191 } from "@/api/memos-v0.19.1";
 import * as log from "@/utils/log";
-import { MemoCli } from "@/api/memos-v0.22.0";
+import { AuthCli, MemoCli } from "@/api/memos-v0.22.0";
 import { Memo } from "@/api/memos-proto-v0.22.0/gen/api/v1/memo_service";
 import {
 	APIResource,
@@ -207,6 +207,7 @@ export class MemosPaginator0220 {
 
 	constructor(
 		private memoCli: MemoCli,
+		private authCli: AuthCli,
 		lastTime?: string,
 		private filter?: (
 			date: string,
@@ -230,13 +231,18 @@ export class MemosPaginator0220 {
 		]) => Promise<void>
 	) => {
 		this.pageToken = ""; // iterate from newest, reset pageToken
+		const currentUser = await this.authCli.getAuthStatus({});
 		while (true) {
 			const resp = await this.memoCli.listMemos({
 				pageSize: this.pageSize,
 				pageToken: this.pageToken,
-				filter: "",
+				// after v0.23.0, creator is required
+				// it's compatible with v0.22.0
+				filter: `creator == "${currentUser.name}"`,
 			});
-			log.debug(`resp for pageToken ${this.pageToken}: ${JSON.stringify(resp)}`)
+			log.debug(
+				`resp for pageToken ${this.pageToken}: ${JSON.stringify(resp)}`
+			);
 			if (!resp) {
 				log.debug("No new daily memos found.");
 				this.lastTime = Date.now().toString();

@@ -11,9 +11,11 @@ import {
 import { MemoServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/memo_service";
 import { ResourceServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/resource_service";
 import * as log from "@/utils/log";
+import { AuthServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/auth_service";
 
 export type MemoCli = Client<MemoServiceDefinition>;
 export type ResourceCli = Client<ResourceServiceDefinition>;
+export type AuthCli = Client<AuthServiceDefinition>;
 
 const loggingMiddleware: ClientMiddleware =
 	async function* devtoolsLoggingMiddleware<Request, Response>(
@@ -65,5 +67,9 @@ export function newClients(endpoint: string, token: string) {
 			ResourceServiceDefinition,
 			channel
 		) as ResourceCli,
+		authCli: clientFactory.create(
+			AuthServiceDefinition,
+			channel
+		) as AuthCli,
 	};
 }
