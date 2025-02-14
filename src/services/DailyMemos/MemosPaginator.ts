@@ -44,16 +44,13 @@ function transformAPIToMdItemMemo(param: APIMemo): MdItemMemo {
 		.format("YYYY-MM-DD HH:mm")
 		.split(" ");
 	const [firstLine, ...otherLine] = content.trim().split("\n");
-	const isTask = /^- \[.*?\]/.test(firstLine); // 目前仅支持 task
+	const taskMatch = firstLine.match(/(- \[.?\])(.*)/); // 目前仅支持 task
 	const isCode = /```/.test(firstLine);
 
 	let targetFirstLine = "";
 
-	if (isTask) {
-		targetFirstLine = `- [ ] ${time} ${firstLine.replace(
-			/^- \[.*?\]/,
-			""
-		)}`;
+	if (taskMatch) {
+		targetFirstLine = `${taskMatch[0]} ${time} ${taskMatch[1]}`;
 	} else if (isCode) {
 		targetFirstLine = `- ${time}`; // 首行不允许存在代码片段
 		otherLine.unshift(firstLine);
