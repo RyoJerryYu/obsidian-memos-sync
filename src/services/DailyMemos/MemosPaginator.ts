@@ -50,7 +50,7 @@ function transformAPIToMdItemMemo(param: APIMemo): MdItemMemo {
 	let targetFirstLine = "";
 
 	if (taskMatch) {
-		targetFirstLine = `${taskMatch[0]} ${time} ${taskMatch[1]}`;
+		targetFirstLine = `${taskMatch[1]} ${time} ${taskMatch[2]}`;
 	} else if (isCode) {
 		targetFirstLine = `- ${time}`; // 首行不允许存在代码片段
 		otherLine.unshift(firstLine);
