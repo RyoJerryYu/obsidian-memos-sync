@@ -9,7 +9,7 @@ import { AuthServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/auth_ser
 import { AuthCli, Clients, MemoCli, ResourceCli } from "./memos-v0.22.0-adapter";
 import { bearerAuthMiddleware, loggingMiddleware } from "./nice-grpc-utils";
 
-export function newClients(endpoint: string, token: string): Clients {
+export function new0220Clients(endpoint: string, token: string): Clients {
 	const channel = createChannel(
 		endpoint,
 		FetchTransport({

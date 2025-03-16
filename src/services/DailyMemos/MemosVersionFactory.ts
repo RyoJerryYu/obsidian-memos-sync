@@ -4,7 +4,7 @@ import {
 	MemosPaginator0191,
 	MemosPaginator0220,
 } from "./MemosPaginator";
-import { newClients } from "@/api/memos-v0.22.0";
+import { new0220Clients } from "@/api/memos-v0.22.0";
 import { AuthCli, MemoCli, ResourceCli } from "@/api/memos-v0.22.0-adapter";
 import { MemosClient0191 } from "@/api/memos-v0.19.1";
 import {
@@ -89,7 +89,7 @@ class MemosFactory0220 {
 		const apiUrl = this.settings.memosAPIURL.endsWith("/")
 			? this.settings.memosAPIURL.slice(0, -1)
 			: this.settings.memosAPIURL;
-		const { memoCli, resourceCli, authCli } = newClients(
+		const { memoCli, resourceCli, authCli } = new0220Clients(
 			apiUrl,
 			this.settings.memosAPIToken
 		);
