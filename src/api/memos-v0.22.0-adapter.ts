@@ -23,11 +23,7 @@ export type HttpBody = {
 };
 
 export type GetAuthStatusRequest = {};
-export type ListMemosRequest = {
-	pageSize: number;
-	pageToken: string;
-	filter: string;
-};
+
 export type ListMemosResponse = {
 	memos: Memo[];
 	nextPageToken: string;
@@ -47,12 +43,6 @@ export type AuthCli = {
 	getAuthStatus: (request: Partial<GetAuthStatusRequest>) => Promise<User>;
 };
 
-export type MemoCli = {
-	listMemos: (
-		request: Partial<ListMemosRequest>
-	) => Promise<ListMemosResponse>;
-};
-
 export type ResourceCli = {
 	listResources: (
 		request: Partial<ListResourcesRequest>
@@ -62,8 +52,12 @@ export type ResourceCli = {
 	) => Promise<HttpBody>;
 };
 
+export type MemoListPaginator = {
+	listMemos: (pageSize: number, pageToken: string, currentUser: User) => Promise<ListMemosResponse>;
+}
+
 export type Clients = {
 	authCli: AuthCli;
-	memoCli: MemoCli;
+	memoListPaginator: MemoListPaginator;
 	resourceCli: ResourceCli;
 };

@@ -143,12 +143,13 @@ class MemosSyncSettingTab extends PluginSettingTab {
 			.addDropdown((dropDown) => {
 				dropDown.addOptions({
 					"v0.19.1": "before v0.21.x",
-					"v0.22.0": "after v0.22.x",
+					"v0.22.0": "v0.22.x ~ v0.23.x",
+					"v0.24.0": "after v0.24.x",
 				});
 				dropDown.setValue(this.plugin.settings.memosAPIVersion);
 				dropDown.onChange((value) => {
 					this.saveSettings({
-						memosAPIVersion: value as "v0.19.1" | "v0.22.0",
+						memosAPIVersion: value as "v0.19.1" | "v0.22.0" | "v0.24.0",
 					});
 				});
 			});

@@ -5,13 +5,19 @@ import {
 	MemosPaginator0220,
 } from "./MemosPaginator";
 import { new0220Clients } from "@/api/memos-v0.22.0";
-import { AuthCli, MemoCli, ResourceCli } from "@/api/memos-v0.22.0-adapter";
+import {
+	AuthCli,
+	Clients,
+	MemoListPaginator,
+	ResourceCli,
+} from "@/api/memos-v0.22.0-adapter";
 import { MemosClient0191 } from "@/api/memos-v0.19.1";
 import {
 	MemosResourceFetcher,
 	MemosResourceFetcher0191,
 	MemosResourceFetcher0220,
 } from "./MemosResourceFetcher";
+import { new0240Clients } from "@/api/memos-v0.24.0";
 
 /**
  * MemosPaginatorFactory
@@ -24,7 +30,11 @@ export class MemosAbstractFactory {
 
 	constructor(private settings: MemosSyncPluginSettings) {
 		if (this.settings.memosAPIVersion === "v0.22.0") {
-			this.inner = new MemosFactory0220(this.settings);
+			this.inner = new MemosFactory0220(this.settings, new0220Clients);
+			return;
+		}
+		if (this.settings.memosAPIVersion === "v0.24.0") {
+			this.inner = new MemosFactory0220(this.settings, new0240Clients);
 			return;
 		}
 
@@ -82,19 +92,22 @@ class MemosFactory0191 {
 }
 
 class MemosFactory0220 {
-	private memoCli: MemoCli;
+	private memoListPaginator: MemoListPaginator;
 	private resourceCli: ResourceCli;
 	private authCli: AuthCli;
-	constructor(private settings: MemosSyncPluginSettings) {
+	constructor(
+		private settings: MemosSyncPluginSettings,
+		newClients: (endpoint: string, token: string) => Clients // for adapters that can adapt into 0220
+	) {
 		const apiUrl = this.settings.memosAPIURL.endsWith("/")
 			? this.settings.memosAPIURL.slice(0, -1)
 			: this.settings.memosAPIURL;
-		const { memoCli, resourceCli, authCli } = new0220Clients(
+		const { memoListPaginator, resourceCli, authCli } = newClients(
 			apiUrl,
 			this.settings.memosAPIToken
 		);
 
-		this.memoCli = memoCli;
+		this.memoListPaginator = memoListPaginator;
 		this.resourceCli = resourceCli;
 		this.authCli = authCli;
 	}
@@ -107,7 +120,7 @@ class MemosFactory0220 {
 		) => boolean
 	): MemosPaginator => {
 		return new MemosPaginator0220(
-			this.memoCli,
+			this.memoListPaginator,
 			this.authCli,
 			lastTime,
 			filter
