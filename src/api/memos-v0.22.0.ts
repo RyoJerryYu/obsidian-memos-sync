@@ -8,12 +8,8 @@ import { MemoServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/memo_ser
 import { ResourceServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/resource_service";
 import * as log from "@/utils/log";
 import { AuthServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/auth_service";
-import { Clients } from "./memos-v0.22.0-adapter";
+import { AuthCli, Clients, MemoCli, ResourceCli } from "./memos-v0.22.0-adapter";
 import { bearerAuthMiddleware, loggingMiddleware } from "./nice-grpc-utils";
-
-export type MemoCli = Client<MemoServiceDefinition>;
-export type ResourceCli = Client<ResourceServiceDefinition>;
-export type AuthCli = Client<AuthServiceDefinition>;
 
 export function newClients(endpoint: string, token: string): Clients {
 	const channel = createChannel(
