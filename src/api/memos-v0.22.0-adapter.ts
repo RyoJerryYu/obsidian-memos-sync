@@ -7,7 +7,7 @@ export type Resource = {
 	filename: string;
 	externalLink: string;
 	type: string;
-	uid: string;
+	uid?: string;
 };
 
 export type Memo = {
