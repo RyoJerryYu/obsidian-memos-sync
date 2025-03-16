@@ -2,11 +2,9 @@ import {
 	createChannel,
 	createClientFactory,
 	FetchTransport,
-	Client,
 } from "nice-grpc-web";
 import { MemoServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/memo_service";
 import { ResourceServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/resource_service";
-import * as log from "@/utils/log";
 import { AuthServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/auth_service";
 import { AuthCli, Clients, MemoCli, ResourceCli } from "./memos-v0.22.0-adapter";
 import { bearerAuthMiddleware, loggingMiddleware } from "./nice-grpc-utils";
