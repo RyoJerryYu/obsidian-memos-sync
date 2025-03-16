@@ -1,53 +1,30 @@
 import {
+	Client,
 	createChannel,
 	createClientFactory,
 	FetchTransport,
-	Client,
-	Metadata,
-	ClientMiddleware,
-	ClientMiddlewareCall,
-	CallOptions,
 } from "nice-grpc-web";
 import { MemoServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/memo_service";
 import { ResourceServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/resource_service";
-import * as log from "@/utils/log";
 import { AuthServiceDefinition } from "./memos-proto-v0.22.0/gen/api/v1/auth_service";
+import { AuthCli, Clients, ResourceCli, User } from "./memos-v0.22.0-adapter";
+import { bearerAuthMiddleware, loggingMiddleware } from "./nice-grpc-utils";
 
-export type MemoCli = Client<MemoServiceDefinition>;
-export type ResourceCli = Client<ResourceServiceDefinition>;
-export type AuthCli = Client<AuthServiceDefinition>;
+class MemoListPaginator implements MemoListPaginator {
+	constructor(private memoCli: Client<MemoServiceDefinition>) {}
 
-const loggingMiddleware: ClientMiddleware =
-	async function* devtoolsLoggingMiddleware<Request, Response>(
-		call: ClientMiddlewareCall<Request, Response>,
-		options: CallOptions
-	): AsyncGenerator<Response, Response | void, undefined> {
-		const req = call.request;
-		let resp;
-		try {
-			resp = yield* call.next(call.request, options);
-			return resp;
-		} finally {
-			log.debug(
-				`gRPC to ${call.method.path}\n\nrequest:\n${JSON.stringify(
-					req
-				)}\n\nresponse:\n${JSON.stringify(resp)}`
-			);
-		}
-	};
-
-const bearerAuthMiddleware: (token: string) => ClientMiddleware = (token) => {
-	return (call, options) =>
-		call.next(call.request, {
-			...options,
-			metadata: Metadata(options.metadata).set(
-				"authorization",
-				`Bearer ${token}`
-			),
+	listMemos(pageSize: number, pageToken: string, currentUser: User) {
+		return this.memoCli.listMemos({
+			pageSize,
+			pageToken,
+			// after v0.23.0, creator is required
+			// it's compatible with v0.22.0
+			filter: `creator == "${currentUser.name}"`,
 		});
-};
+	}
+}
 
-export function newClients(endpoint: string, token: string) {
+export function new0220Clients(endpoint: string, token: string): Clients {
 	const channel = createChannel(
 		endpoint,
 		FetchTransport({
@@ -59,10 +36,9 @@ export function newClients(endpoint: string, token: string) {
 		.use(bearerAuthMiddleware(token));
 
 	return {
-		memoCli: clientFactory.create(
-			MemoServiceDefinition,
-			channel
-		) as MemoCli,
+		memoListPaginator: new MemoListPaginator(
+			clientFactory.create(MemoServiceDefinition, channel)
+		),
 		resourceCli: clientFactory.create(
 			ResourceServiceDefinition,
 			channel

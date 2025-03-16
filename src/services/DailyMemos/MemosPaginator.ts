@@ -1,7 +1,6 @@
 import { DailyRecordType, MemosClient0191 } from "@/api/memos-v0.19.1";
 import * as log from "@/utils/log";
-import { AuthCli, MemoCli } from "@/api/memos-v0.22.0";
-import { Memo } from "@/api/memos-proto-v0.22.0/gen/api/v1/memo_service";
+import { AuthCli, Memo, MemoListPaginator } from "@/api/memos-v0.22.0-adapter";
 import {
 	APIResource,
 	convert0220ResourceToAPIResource,
@@ -206,7 +205,7 @@ export class MemosPaginator0220 {
 	private lastTime: string;
 
 	constructor(
-		private memoCli: MemoCli,
+		private memoListPaginator: MemoListPaginator,
 		private authCli: AuthCli,
 		lastTime?: string,
 		private filter?: (
@@ -230,16 +229,17 @@ export class MemosPaginator0220 {
 			Record<string, string> // daily memos for today, map<timestamp, content>
 		]) => Promise<void>
 	) => {
-		this.pageToken = ""; // iterate from newest, reset pageToken
+		// because memos pagination is from newest to oldest
+		// so we always need to iterate from newest and reset pageToken
+		// what ever we are doing a full sync or delta sync
+		this.pageToken = ""; 
 		const currentUser = await this.authCli.getAuthStatus({});
 		while (true) {
-			const resp = await this.memoCli.listMemos({
-				pageSize: this.pageSize,
-				pageToken: this.pageToken,
-				// after v0.23.0, creator is required
-				// it's compatible with v0.22.0
-				filter: `creator == "${currentUser.name}"`,
-			});
+			const resp = await this.memoListPaginator.listMemos(
+				this.pageSize,
+				this.pageToken,
+				currentUser
+			);
 			log.debug(
 				`resp for pageToken ${this.pageToken}: ${JSON.stringify(resp)}`
 			);

@@ -1,6 +1,6 @@
 import { MemosClient0191 } from "@/api/memos-v0.19.1";
 import * as log from "@/utils/log";
-import { ResourceCli } from "@/api/memos-v0.22.0";
+import { ResourceCli } from "@/api/memos-v0.22.0-adapter";
 import { APIResource, convert0220ResourceToAPIResource } from "./MemosResource";
 
 export type MemosResourceFetcher = {
