@@ -1,7 +1,6 @@
 import { DailyRecordType, MemosClient0191 } from "@/api/memos-v0.19.1";
 import * as log from "@/utils/log";
-import { AuthCli, MemoCli } from "@/api/memos-v0.22.0";
-import { Memo } from "@/api/memos-proto-v0.22.0/gen/api/v1/memo_service";
+import { AuthCli, MemoCli, Memo } from "@/api/memos-v0.22.0-adapter";
 import {
 	APIResource,
 	convert0220ResourceToAPIResource,
