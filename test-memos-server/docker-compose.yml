@@ -18,3 +18,9 @@ services:
         container_name: memos_0230
         ports:
             - 5233:5230
+    memos_0240:
+        # used for end to end test
+        image: neosmemo/memos:0.24.0
+        container_name: memos_0240
+        ports:
+            - 5234:5230
