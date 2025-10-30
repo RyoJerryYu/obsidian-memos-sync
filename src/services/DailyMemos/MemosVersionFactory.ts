@@ -3,6 +3,7 @@ import {
 	MemosPaginator,
 	MemosPaginator0191,
 	MemosPaginator0220,
+	MemosPaginator0251,
 } from "./MemosPaginator";
 import { new0220Clients } from "@/api/memos-v0.22.0";
 import {
@@ -16,8 +17,14 @@ import {
 	MemosResourceFetcher,
 	MemosResourceFetcher0191,
 	MemosResourceFetcher0220,
+	MemosResourceFetcher0251,
 } from "./MemosResourceFetcher";
 import { new0240Clients } from "@/api/memos-v0.24.0";
+import { new0251Clients } from "@/api/memos-v0.25.1";
+import { 
+	AttachmentCli,
+	Clients as Clients0251
+} from "@/api/memos-v0.25.1-adapter";
 
 /**
  * MemosPaginatorFactory
@@ -35,6 +42,10 @@ export class MemosAbstractFactory {
 		}
 		if (this.settings.memosAPIVersion === "v0.24.0") {
 			this.inner = new MemosFactory0220(this.settings, new0240Clients);
+			return;
+		}
+		if (this.settings.memosAPIVersion === "v0.25.1") {
+			this.inner = new MemosFactory0251(this.settings);
 			return;
 		}
 
@@ -129,5 +140,35 @@ class MemosFactory0220 {
 
 	createResourceFetcher = () => {
 		return new MemosResourceFetcher0220(this.resourceCli);
+	};
+}
+
+class MemosFactory0251 {
+	private client: Clients0251;
+
+	constructor(private settings: MemosSyncPluginSettings) {
+		const apiUrl = this.settings.memosAPIURL.endsWith("/")
+			? this.settings.memosAPIURL.slice(0, -1)
+			: this.settings.memosAPIURL;
+		this.client = new0251Clients(apiUrl, this.settings.memosAPIToken);
+	}
+
+	createMemosPaginator = (
+		lastTime?: string,
+		filter?: (
+			date: string,
+			dailyMemosForDate: Record<string, string>
+		) => boolean
+	): MemosPaginator => {
+		return new MemosPaginator0251(
+			this.client.memoListPaginator,
+			this.client.authCli,
+			lastTime,
+			filter
+		);
+	};
+
+	createResourceFetcher = () => {
+		return new MemosResourceFetcher0251(this.client.attachmentCli);
 	};
 }
