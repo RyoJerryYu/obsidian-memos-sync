@@ -15,6 +15,7 @@ export type Memo = {
 	createTime?: Date | undefined;
 	updateTime?: Date | undefined;
 	resources?: Resource[];
+	attachments?: Resource[]; // v0.25.1+ uses "attachments" instead of "resources"
 };
 
 export type HttpBody = {
@@ -40,7 +41,8 @@ export type GetResourceBinaryRequest = {
 };
 
 export type AuthCli = {
-	getAuthStatus: (request: Partial<GetAuthStatusRequest>) => Promise<User>;
+	getAuthStatus?: (request: Partial<GetAuthStatusRequest>) => Promise<User>;
+	getCurrentSession?: (request: Partial<GetAuthStatusRequest>) => Promise<User>;
 };
 
 export type ResourceCli = {
@@ -56,8 +58,37 @@ export type MemoListPaginator = {
 	listMemos: (pageSize: number, pageToken: string, currentUser: User) => Promise<ListMemosResponse>;
 }
 
+export type AttachmentCli = {
+	listAttachments: (
+		request: Partial<ListAttachmentsRequest>
+	) => Promise<ListAttachmentsResponse>;
+	getAttachmentBinary: (
+		request: Partial<GetAttachmentBinaryRequest>
+	) => Promise<HttpBody>;
+};
+
+export type ListAttachmentsRequest = {
+	pageSize?: number;
+	pageToken?: string;
+	filter?: string;
+	orderBy?: string;
+};
+
+export type ListAttachmentsResponse = {
+	attachments: Resource[];
+	nextPageToken?: string;
+	totalSize?: number;
+};
+
+export type GetAttachmentBinaryRequest = {
+	name: string;
+	filename: string;
+	thumbnail?: boolean;
+};
+
 export type Clients = {
 	authCli: AuthCli;
 	memoListPaginator: MemoListPaginator;
-	resourceCli: ResourceCli;
+	resourceCli?: ResourceCli;
+	attachmentCli?: AttachmentCli;
 };

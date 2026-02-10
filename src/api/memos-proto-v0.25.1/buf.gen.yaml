@@ -1,0 +1,16 @@
+version: v1
+managed:
+  enabled: true
+plugins:
+  # Build the TypeScript definitions for the web.
+  - plugin: buf.build/community/stephenh-ts-proto
+    out: gen
+    # reference: https://github.com/deeplay-io/nice-grpc/blob/master/packages/nice-grpc-web/README.md#using-ts-proto
+    opt:
+      - env=browser
+      - useOptionals=messages
+      - outputServices=generic-definitions
+      - outputJsonMethods=false
+      - useExactTypes=false
+      - esModuleInterop=true
+      - stringEnums=true

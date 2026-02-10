@@ -3,9 +3,11 @@ import {
 	MemosPaginator,
 	MemosPaginator0191,
 	MemosPaginator0220,
+	MemosPaginator0261,
 } from "./MemosPaginator";
 import { new0220Clients } from "@/api/memos-v0.22.0";
 import {
+	AttachmentCli,
 	AuthCli,
 	Clients,
 	MemoListPaginator,
@@ -16,8 +18,11 @@ import {
 	MemosResourceFetcher,
 	MemosResourceFetcher0191,
 	MemosResourceFetcher0220,
+	MemosResourceFetcher0251,
+	MemosResourceFetcher0261,
 } from "./MemosResourceFetcher";
 import { new0240Clients } from "@/api/memos-v0.24.0";
+import { new0251Clients } from "@/api/memos-v0.25.1";
 
 /**
  * MemosPaginatorFactory
@@ -35,6 +40,14 @@ export class MemosAbstractFactory {
 		}
 		if (this.settings.memosAPIVersion === "v0.24.0") {
 			this.inner = new MemosFactory0220(this.settings, new0240Clients);
+			return;
+		}
+		if (this.settings.memosAPIVersion === "v0.25.1") {
+			this.inner = new MemosFactory0251(this.settings);
+			return;
+		}
+		if (this.settings.memosAPIVersion === "v0.26.1") {
+			this.inner = new MemosFactory0261(this.settings);
 			return;
 		}
 
@@ -102,14 +115,14 @@ class MemosFactory0220 {
 		const apiUrl = this.settings.memosAPIURL.endsWith("/")
 			? this.settings.memosAPIURL.slice(0, -1)
 			: this.settings.memosAPIURL;
-		const { memoListPaginator, resourceCli, authCli } = newClients(
+		const clients = newClients(
 			apiUrl,
 			this.settings.memosAPIToken
 		);
 
-		this.memoListPaginator = memoListPaginator;
-		this.resourceCli = resourceCli;
-		this.authCli = authCli;
+		this.memoListPaginator = clients.memoListPaginator;
+		this.resourceCli = clients.resourceCli!; // v0.22.0/v0.24.0 always have resourceCli
+		this.authCli = clients.authCli!;
 	}
 
 	createMemosPaginator = (
@@ -129,5 +142,83 @@ class MemosFactory0220 {
 
 	createResourceFetcher = () => {
 		return new MemosResourceFetcher0220(this.resourceCli);
+	};
+}
+
+/**
+ * MemosFactory for v0.25.1
+ * Uses AttachmentService (replaces ResourceService from v0.24.x)
+ */
+class MemosFactory0251 {
+	private memoListPaginator: MemoListPaginator;
+	private attachmentCli: AttachmentCli;
+	private authCli: AuthCli;
+	constructor(private settings: MemosSyncPluginSettings) {
+		const apiUrl = this.settings.memosAPIURL.endsWith("/")
+			? this.settings.memosAPIURL.slice(0, -1)
+			: this.settings.memosAPIURL;
+		const clients = new0251Clients(
+			apiUrl,
+			this.settings.memosAPIToken
+		);
+
+		this.memoListPaginator = clients.memoListPaginator;
+		this.attachmentCli = clients.attachmentCli!; // v0.25.1 always have attachmentCli
+		this.authCli = clients.authCli!;
+	}
+
+	createMemosPaginator = (
+		lastTime?: string,
+		filter?: (
+			date: string,
+			dailyMemosForDate: Record<string, string>
+		) => boolean
+	): MemosPaginator => {
+		return new MemosPaginator0220(
+			this.memoListPaginator,
+			this.authCli,
+			lastTime,
+			filter
+		);
+	};
+
+	createResourceFetcher = () => {
+		return new MemosResourceFetcher0251(this.attachmentCli);
+	};
+}
+
+/**
+ * MemosFactory for v0.26.1
+ * Uses Obsidian requestUrl (bypasses CORS) + Connect protocol JSON format
+ * No gRPC clients needed - directly uses apiUrl and token
+ */
+class MemosFactory0261 {
+	private apiUrl: string;
+	constructor(private settings: MemosSyncPluginSettings) {
+		this.apiUrl = this.settings.memosAPIURL.endsWith("/")
+			? this.settings.memosAPIURL.slice(0, -1)
+			: this.settings.memosAPIURL;
+	}
+
+	createMemosPaginator = (
+		lastTime?: string,
+		filter?: (
+			date: string,
+			dailyMemosForDate: Record<string, string>
+		) => boolean
+	): MemosPaginator => {
+		return new MemosPaginator0261(
+			this.apiUrl,
+			this.settings.memosAPIToken,
+			lastTime,
+			filter
+		);
+	};
+
+	createResourceFetcher = () => {
+		return new MemosResourceFetcher0261(
+			this.apiUrl,
+			this.settings.memosAPIToken
+		);
 	};
 }
